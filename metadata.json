@@ -1,0 +1,6 @@
+{
+  "name": "Kamino - Gestor Inteligente de Rutas de Estudio",
+  "description": "Plataforma integral para planificar, rastrear y optimizar rutas de estudio con planificador adaptativo, seguimiento de progreso, notificaciones automáticas y mentoría técnica IA con modo de pensamiento profundo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

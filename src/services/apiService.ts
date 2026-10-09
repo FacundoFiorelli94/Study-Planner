@@ -1,0 +1,85 @@
+export interface ChatApiRequest {
+  messages: { role: 'user' | 'model'; text: string }[];
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3.1-flash-lite';
+  systemInstruction?: string;
+  enableHighThinking?: boolean;
+}
+
+export interface ChatApiResponse {
+  response: string;
+  modelUsed: string;
+  highThinkingEnabled?: boolean;
+  warning?: string;
+}
+
+export interface PlannerGenerateRequest {
+  topic: string;
+  weeklyHours: number;
+  preferredDays: string[];
+  currentLevel: string;
+  targetWeeks: number;
+  notes?: string;
+}
+
+export interface EvaluateRequest {
+  moduleTitle: string;
+  phaseTitle: string;
+  topics: string[];
+  userCodeOrAnswer?: string;
+}
+
+export interface EvaluateResponse {
+  score: number;
+  passed: boolean;
+  summaryFeedback: string;
+  detailedCritique: string;
+  recommendedAction: string;
+  followUpChallenge?: string;
+}
+
+export class ApiService {
+  static async sendChatMessage(payload: ChatApiRequest): Promise<ChatApiResponse> {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error en el servidor: HTTP ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  static async generateSmartRoadmap(payload: PlannerGenerateRequest): Promise<any> {
+    const res = await fetch('/api/planner/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error al generar la ruta: HTTP ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  static async evaluateMilestone(payload: EvaluateRequest): Promise<EvaluateResponse> {
+    const res = await fetch('/api/study/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error evaluando el hito: HTTP ${res.status}`);
+    }
+
+    return res.json();
+  }
+}
