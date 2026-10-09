@@ -20,8 +20,10 @@ import { FocusPomodoroTimer } from './components/timer/FocusPomodoroTimer';
 import { EvaluateMilestoneModal } from './components/modals/EvaluateMilestoneModal';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { CreateRoadmapModal } from './components/modals/CreateRoadmapModal';
+import { QuickDemoCard } from './components/demo/QuickDemoCard';
 
 export default function App() {
+  const [isDemoMode, setIsDemoMode] = useState(true);
   const [currentTab, setCurrentTab] = useState<'roadmap' | 'planner' | 'progress' | 'chat'>('roadmap');
   const [allRoadmaps, setAllRoadmaps] = useState<StudyRoadmap[]>(() => StorageService.getRoadmaps());
   const [activeRoadmap, setActiveRoadmap] = useState<StudyRoadmap>(() => StorageService.getActiveRoadmap());
@@ -316,50 +318,68 @@ export default function App() {
           setIsTimerOpen(true);
         }}
         activeRoadmapTitle={activeRoadmap.title}
+        isDemoMode={isDemoMode}
+        onToggleDemoMode={() => setIsDemoMode(!isDemoMode)}
       />
 
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {currentTab === 'roadmap' && (
-          <RoadmapViewer
-            roadmap={activeRoadmap}
-            allRoadmaps={allRoadmaps}
-            onSelectRoadmap={handleSelectRoadmap}
-            onUpdateModuleStatus={handleUpdateModuleStatus}
-            onUpdateDeliverable={handleUpdateDeliverable}
-            onOpenEvaluateModal={handleOpenEvaluateModal}
-            onStartFocusSession={handleStartFocusSession}
-            onUpdatePaceAndBudget={handleUpdatePaceAndBudget}
-          />
-        )}
-
-        {currentTab === 'planner' && (
-          <SmartPlanner
-            roadmap={activeRoadmap}
-            sessions={sessions}
-            onAddSession={handleAddSession}
-            onToggleSessionComplete={handleToggleSessionComplete}
-            onStartFocusSessionForScheduled={handleStartFocusFromScheduled}
-            onRebalanceScheduleWithAI={handleRebalanceScheduleWithAI}
-            isRebalancing={isRebalancing}
-          />
-        )}
-
-        {currentTab === 'progress' && (
-          <ProgressDashboard
-            roadmap={activeRoadmap}
-            onUpdateProjectStatus={handleUpdateProjectStatus}
-            onDataImported={() => {
-              setActiveRoadmap(StorageService.getActiveRoadmap());
-              setAllRoadmaps(StorageService.getRoadmaps());
-              setSessions(StorageService.getSessions());
-              setNotifications(StorageService.getNotifications());
+        {isDemoMode ? (
+          <QuickDemoCard
+            onSwitchToFullApp={() => setIsDemoMode(false)}
+            onOpenTimerModal={() => {
+              setTimerTarget({
+                module: activeRoadmap.phases[0]?.modules[0] || null,
+                phase: activeRoadmap.phases[0] || null,
+              });
+              setIsTimerOpen(true);
             }}
+            onOpenNotifications={() => setIsNotificationsOpen(true)}
           />
-        )}
+        ) : (
+          <>
+            {currentTab === 'roadmap' && (
+              <RoadmapViewer
+                roadmap={activeRoadmap}
+                allRoadmaps={allRoadmaps}
+                onSelectRoadmap={handleSelectRoadmap}
+                onUpdateModuleStatus={handleUpdateModuleStatus}
+                onUpdateDeliverable={handleUpdateDeliverable}
+                onOpenEvaluateModal={handleOpenEvaluateModal}
+                onStartFocusSession={handleStartFocusSession}
+                onUpdatePaceAndBudget={handleUpdatePaceAndBudget}
+              />
+            )}
 
-        {currentTab === 'chat' && (
-          <GeminiMentorChat roadmap={activeRoadmap} />
+            {currentTab === 'planner' && (
+              <SmartPlanner
+                roadmap={activeRoadmap}
+                sessions={sessions}
+                onAddSession={handleAddSession}
+                onToggleSessionComplete={handleToggleSessionComplete}
+                onStartFocusSessionForScheduled={handleStartFocusFromScheduled}
+                onRebalanceScheduleWithAI={handleRebalanceScheduleWithAI}
+                isRebalancing={isRebalancing}
+              />
+            )}
+
+            {currentTab === 'progress' && (
+              <ProgressDashboard
+                roadmap={activeRoadmap}
+                onUpdateProjectStatus={handleUpdateProjectStatus}
+                onDataImported={() => {
+                  setActiveRoadmap(StorageService.getActiveRoadmap());
+                  setAllRoadmaps(StorageService.getRoadmaps());
+                  setSessions(StorageService.getSessions());
+                  setNotifications(StorageService.getNotifications());
+                }}
+              />
+            )}
+
+            {currentTab === 'chat' && (
+              <GeminiMentorChat roadmap={activeRoadmap} />
+            )}
+          </>
         )}
       </main>
 

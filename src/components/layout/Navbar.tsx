@@ -9,6 +9,8 @@ interface NavbarProps {
   onOpenNewRoadmapModal: () => void;
   onOpenTimerModal: () => void;
   activeRoadmapTitle: string;
+  isDemoMode: boolean;
+  onToggleDemoMode: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,6 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNewRoadmapModal,
   onOpenTimerModal,
   activeRoadmapTitle,
+  isDemoMode,
+  onToggleDemoMode,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -40,6 +44,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Zone 2: 4 concise single-line nav links */}
         <nav className="hidden md:flex items-center gap-1 sm:gap-2">
+          <button
+            onClick={onToggleDemoMode}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap mr-2 ${
+              isDemoMode
+                ? 'bg-amber-400 text-slate-950 shadow-sm'
+                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>{isDemoMode ? 'Vista Demo' : 'Demo Express ⚡'}</span>
+          </button>
           <button
             onClick={() => onSelectTab('roadmap')}
             className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
