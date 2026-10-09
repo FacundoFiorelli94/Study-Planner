@@ -140,43 +140,43 @@ export const FocusPomodoroTimer: React.FC<FocusPomodoroTimerProps> = ({
   const currentModule = allModules.find((m) => m.id === selectedModuleId);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-6 relative">
+    <div className="fixed inset-0 z-50 bg-[#000000]/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#181a22] rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-xl border border-[#2b303e] space-y-6 relative text-slate-200">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 transition-colors"
+          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
-            <Timer className="w-3.5 h-3.5" />
-            <span>Temporizador de Estudio Pomodoro</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+            <Timer className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Temporizador Pomodoro</span>
           </div>
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-xl font-bold text-slate-100 tracking-tight">
             {mode === 'work' ? 'Bloque de Enfoque Profundo' : 'Pausa de Descanso'}
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             El tiempo invertido se registrará automáticamente en tu progreso.
           </p>
         </div>
 
         {/* Module Picker */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-700 block">
+          <label className="text-xs font-semibold text-slate-300 block">
             Objetivo / Módulo Activo:
           </label>
           <select
             value={selectedModuleId}
             onChange={(e) => setSelectedModuleId(e.target.value)}
             disabled={isRunning}
-            className="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+            className="w-full text-xs font-medium p-2.5 rounded-xl border border-[#2b303e] bg-[#15171f] text-slate-200 focus:outline-none focus:border-indigo-500"
           >
             {allModules.map((m) => (
-              <option key={m.id} value={m.id}>
+              <option key={m.id} value={m.id} className="bg-[#181a22] text-slate-200">
                 {m.title}
               </option>
             ))}
@@ -194,10 +194,10 @@ export const FocusPomodoroTimer: React.FC<FocusPomodoroTimerProps> = ({
                   setWorkMinutes(dur);
                   setTimeLeftSeconds(dur * 60);
                 }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
                   workMinutes === dur && mode === 'work'
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-[#15171f] text-slate-400 hover:text-white border border-[#282d3b]'
                 }`}
               >
                 {dur} min
@@ -208,21 +208,21 @@ export const FocusPomodoroTimer: React.FC<FocusPomodoroTimerProps> = ({
 
         {/* Clock Big Display */}
         <div className="py-4 text-center">
-          <div className="text-6xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">
+          <div className="text-6xl font-bold text-slate-100 tracking-tight font-mono tabular-nums">
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </div>
-          <span className="text-xs font-medium text-slate-500 mt-2 block">
-            {mode === 'work' ? '⚡ Concentración al 100%' : '☕ Relájate unos minutos'}
+          <span className="text-xs font-medium text-slate-400 mt-2 block">
+            {mode === 'work' ? '⚡ Concentración activa' : '☕ Relájate unos minutos'}
           </span>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex items-center justify-center gap-4 pt-1">
           <button
             type="button"
             onClick={resetTimer}
             title="Reiniciar temporizador"
-            className="p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-3 text-slate-400 hover:text-white hover:bg-[#252834] rounded-full transition-colors"
           >
             <RotateCcw className="w-5 h-5" />
           </button>
@@ -230,7 +230,7 @@ export const FocusPomodoroTimer: React.FC<FocusPomodoroTimerProps> = ({
           <button
             type="button"
             onClick={togglePlay}
-            className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-2xl shadow-md transition-all flex items-center gap-2"
+            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-sm"
           >
             {isRunning ? (
               <>
@@ -248,9 +248,9 @@ export const FocusPomodoroTimer: React.FC<FocusPomodoroTimerProps> = ({
 
         {/* Logged Minutes info */}
         {currentModule && (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs flex items-center justify-between text-slate-600">
+          <div className="p-3 bg-[#15171f] rounded-xl border border-[#262a36] text-xs flex items-center justify-between text-slate-300">
             <span>Tiempo acumulado en este módulo:</span>
-            <span className="font-bold text-slate-900 tabular-nums">
+            <span className="font-semibold text-indigo-300 tabular-nums">
               {Math.round((currentModule.loggedMinutes || 0) / 60)}h ({currentModule.loggedMinutes || 0} min)
             </span>
           </div>

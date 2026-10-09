@@ -138,18 +138,18 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+    <div className="fixed inset-0 z-50 bg-[#000000]/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#181a22] rounded-2xl max-w-xl w-full p-6 sm:p-7 shadow-xl border border-[#2b303e] space-y-5 max-h-[90vh] overflow-y-auto text-slate-200">
+        <div className="flex items-start justify-between border-b border-[#262a36] pb-3">
           <div>
-            <div className="flex items-center gap-2 text-xs text-amber-700 font-semibold mb-1">
+            <div className="flex items-center gap-2 text-xs text-amber-400 font-semibold mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Planificador Inteligente con Gemini</span>
             </div>
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-100 tracking-tight">
               Crear Nueva Ruta de Estudio Personalizada
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               Define tu objetivo y disponibilidad semanal; la IA estructurará las fases, módulos y entregables.
             </p>
           </div>
@@ -157,7 +157,7 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-slate-400 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -165,7 +165,7 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
 
         <form onSubmit={handleGenerate} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
               ¿Qué habilidad o tecnología deseas dominar?
             </label>
             <input
@@ -174,14 +174,14 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="ej. LangGraph y Agentes Autónomos, Cloud Native DevOps, Rust Backend..."
-              className="w-full text-xs font-medium p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+              className="w-full text-xs font-medium p-3 rounded-xl border border-[#2b303e] bg-[#15171f] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Horas disponibles por semana: <span className="text-amber-800 font-bold">{weeklyHours}h</span>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Horas disponibles por semana: <span className="text-indigo-400 font-bold">{weeklyHours}h</span>
               </label>
               <input
                 type="range"
@@ -189,7 +189,7 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
                 max="30"
                 value={weeklyHours}
                 onChange={(e) => setWeeklyHours(Number(e.target.value))}
-                className="w-full accent-slate-900 cursor-pointer"
+                className="w-full accent-indigo-500 cursor-pointer h-2 bg-[#252834] rounded-lg"
               />
               <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
                 <span>3h</span>
@@ -199,25 +199,25 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
                 Duración meta (semanas):
               </label>
               <select
                 value={targetWeeks}
                 onChange={(e) => setTargetWeeks(Number(e.target.value))}
-                className="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="w-full text-xs font-medium p-2.5 rounded-xl border border-[#2b303e] bg-[#15171f] text-slate-200 focus:outline-none focus:border-indigo-500"
               >
-                <option value={4}>4 semanas (Sprint de 1 mes)</option>
-                <option value={8}>8 semanas (2 meses)</option>
-                <option value={12}>12 semanas (Trimestre recomendado)</option>
-                <option value={20}>20 semanas (5 meses)</option>
-                <option value={30}>30 semanas (Plan Maestro Completo)</option>
+                <option value={4} className="bg-[#181a22]">4 semanas (Sprint de 1 mes)</option>
+                <option value={8} className="bg-[#181a22]">8 semanas (2 meses)</option>
+                <option value={12} className="bg-[#181a22]">12 semanas (Trimestre recomendado)</option>
+                <option value={20} className="bg-[#181a22]">20 semanas (5 meses)</option>
+                <option value={30} className="bg-[#181a22]">30 semanas (Carrera Completa)</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-300 block mb-1.5">
               Días en los que podrás estudiar:
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -226,10 +226,10 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
                   key={d}
                   type="button"
                   onClick={() => toggleDay(d)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
                     selectedDays.includes(d)
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-[#15171f] text-slate-400 hover:text-white border border-[#282d3b]'
                   }`}
                 >
                   {d}
@@ -240,52 +240,52 @@ export const CreateRoadmapModal: React.FC<CreateRoadmapModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
                 Nivel de partida:
               </label>
               <select
                 value={currentLevel}
                 onChange={(e) => setCurrentLevel(e.target.value)}
-                className="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                className="w-full text-xs font-medium p-2.5 rounded-xl border border-[#2b303e] bg-[#15171f] text-slate-200 focus:outline-none focus:border-indigo-500"
               >
-                <option value="Principiante">Principiante (Desde cero)</option>
-                <option value="Intermedio">Intermedio (Tengo bases previas)</option>
-                <option value="Avanzado">Avanzado (Especialización profunda)</option>
+                <option value="Principiante" className="bg-[#181a22]">Principiante (Desde cero)</option>
+                <option value="Intermedio" className="bg-[#181a22]">Intermedio (Tengo bases previas)</option>
+                <option value="Avanzado" className="bg-[#181a22]">Avanzado (Especialización profunda)</option>
               </select>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Notas y preferencias técnicas (opcional):
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Notas técnicas (opcional):
               </label>
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="ej. Preferencia por proyectos con Docker y FastAPI"
-                className="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                placeholder="ej. Preferencia por Docker, FastAPI o LangGraph"
+                className="w-full text-xs font-medium p-2.5 rounded-xl border border-[#2b303e] bg-[#15171f] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
 
           {error && (
-            <div className="p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-200">
+            <div className="p-3 bg-rose-950/40 text-rose-300 text-xs rounded-xl border border-rose-500/30">
               {error}
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#262a36]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
+              className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !topic.trim()}
-              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 rounded-xl transition-colors shadow-sm flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{loading ? 'Generando Ruta con Gemini...' : 'Generar Ruta Inteligente'}</span>

@@ -3,12 +3,15 @@ export interface ChatApiRequest {
   model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3.1-flash-lite';
   systemInstruction?: string;
   enableHighThinking?: boolean;
+  useGoogleSearch?: boolean;
 }
 
 export interface ChatApiResponse {
   response: string;
   modelUsed: string;
   highThinkingEnabled?: boolean;
+  groundedWithSearch?: boolean;
+  sources?: { title: string; url: string }[];
   warning?: string;
 }
 
@@ -51,6 +54,38 @@ export class ApiService {
     }
 
     return res.json();
+  }
+
+  static async transcribeAudio(audioBlob: Blob): Promise<string> {
+    // Convert blob to base64
+    const base64Audio = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        // Strip data:audio/...;base64,
+        const base64 = result.split(',')[1] || result;
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(audioBlob);
+    });
+
+    const res = await fetch('/api/transcribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audioBase64: base64Audio,
+        mimeType: audioBlob.type || 'audio/webm',
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error transcribiendo audio con gemini-3.5-transcribe');
+    }
+
+    const data = await res.json();
+    return data.text || '';
   }
 
   static async generateSmartRoadmap(payload: PlannerGenerateRequest): Promise<any> {

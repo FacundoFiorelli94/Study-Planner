@@ -3,9 +3,10 @@
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #0f172a;
-    background-color: #f8fafc;
+    color: #dce1eb;
+    background-color: #13151b;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   code, pre, .font-mono {
@@ -13,19 +14,252 @@
   }
 }
 
-/* Custom subtle scrollbar */
+/* Custom soft and comfortable scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #13151b;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #282c38;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #363c4c;
 }
+
+/* ========================================================
+   GLOBAL PALETTE THEMES (Preserving Pizarra Suave untouched)
+   ======================================================== */
+
+/* 1. NÓRDICO FRÍO (Nord Dark: Azul Calmo & Carbón Nórdico) */
+body[data-theme="nord-dark"] {
+  background-color: #0d131d !important;
+  color: #d8e3f0;
+}
+body[data-theme="nord-dark"] ::-webkit-scrollbar-track {
+  background: #0d131d;
+}
+body[data-theme="nord-dark"] ::-webkit-scrollbar-thumb {
+  background: #1e2c3e;
+}
+body[data-theme="nord-dark"] .bg-\[\#13151b\],
+body[data-theme="nord-dark"] .bg-\[\#13151c\] {
+  background-color: #0d131d !important;
+}
+body[data-theme="nord-dark"] .bg-\[\#16181f\],
+body[data-theme="nord-dark"] .bg-\[\#161822\],
+body[data-theme="nord-dark"] .bg-\[\#14161f\],
+body[data-theme="nord-dark"] .bg-\[\#141620\],
+body[data-theme="nord-dark"] .bg-\[\#12141d\],
+body[data-theme="nord-dark"] .bg-\[\#10121b\],
+body[data-theme="nord-dark"] .bg-\[\#10121a\] {
+  background-color: #101724 !important;
+}
+body[data-theme="nord-dark"] .bg-\[\#181a22\],
+body[data-theme="nord-dark"] .bg-\[\#181a24\],
+body[data-theme="nord-dark"] .bg-\[\#1b1e27\],
+body[data-theme="nord-dark"] .bg-\[\#1a1d27\],
+body[data-theme="nord-dark"] .bg-\[\#1a1d28\],
+body[data-theme="nord-dark"] .bg-\[\#171a24\],
+body[data-theme="nord-dark"] .bg-\[\#15171f\],
+body[data-theme="nord-dark"] .bg-\[\#1f222d\],
+body[data-theme="nord-dark"] .bg-\[\#1f222c\],
+body[data-theme="nord-dark"] .bg-\[\#222634\],
+body[data-theme="nord-dark"] .bg-\[\#262a36\] {
+  background-color: #141f2e !important;
+}
+body[data-theme="nord-dark"] .border-\[\#252834\],
+body[data-theme="nord-dark"] .border-\[\#262a36\],
+body[data-theme="nord-dark"] .border-\[\#272b38\],
+body[data-theme="nord-dark"] .border-\[\#282c38\],
+body[data-theme="nord-dark"] .border-\[\#282d3b\],
+body[data-theme="nord-dark"] .border-\[\#282d3c\],
+body[data-theme="nord-dark"] .border-\[\#292e3e\],
+body[data-theme="nord-dark"] .border-\[\#2b3040\],
+body[data-theme="nord-dark"] .border-\[\#2c3140\],
+body[data-theme="nord-dark"] .border-\[\#2d3240\],
+body[data-theme="nord-dark"] .border-\[\#2e3342\],
+body[data-theme="nord-dark"] .border-\[\#303546\],
+body[data-theme="nord-dark"] .border-\[\#212430\] {
+  border-color: #213247 !important;
+}
+body[data-theme="nord-dark"] .bg-indigo-600 {
+  background-color: #0284c7 !important;
+}
+body[data-theme="nord-dark"] .hover\:bg-indigo-500:hover,
+body[data-theme="nord-dark"] .hover\:bg-indigo-600:hover {
+  background-color: #0369a1 !important;
+}
+body[data-theme="nord-dark"] .text-indigo-400,
+body[data-theme="nord-dark"] .text-indigo-300,
+body[data-theme="nord-dark"] .text-indigo-200 {
+  color: #38bdf8 !important;
+}
+body[data-theme="nord-dark"] .bg-indigo-500\/15,
+body[data-theme="nord-dark"] .bg-indigo-500\/20,
+body[data-theme="nord-dark"] .bg-indigo-500\/25,
+body[data-theme="nord-dark"] .bg-indigo-600\/20 {
+  background-color: rgba(56, 189, 248, 0.16) !important;
+}
+body[data-theme="nord-dark"] .border-indigo-500\/30,
+body[data-theme="nord-dark"] .border-indigo-500\/25,
+body[data-theme="nord-dark"] .border-indigo-500\/40 {
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+/* 2. GRAFITO CÁLIDO (Warm Charcoal: Ámbar Suave & Ceniza) */
+body[data-theme="warm-charcoal"] {
+  background-color: #151311 !important;
+  color: #eae3db;
+}
+body[data-theme="warm-charcoal"] ::-webkit-scrollbar-track {
+  background: #151311;
+}
+body[data-theme="warm-charcoal"] ::-webkit-scrollbar-thumb {
+  background: #2e2821;
+}
+body[data-theme="warm-charcoal"] .bg-\[\#13151b\],
+body[data-theme="warm-charcoal"] .bg-\[\#13151c\] {
+  background-color: #151311 !important;
+}
+body[data-theme="warm-charcoal"] .bg-\[\#16181f\],
+body[data-theme="warm-charcoal"] .bg-\[\#161822\],
+body[data-theme="warm-charcoal"] .bg-\[\#14161f\],
+body[data-theme="warm-charcoal"] .bg-\[\#141620\],
+body[data-theme="warm-charcoal"] .bg-\[\#12141d\],
+body[data-theme="warm-charcoal"] .bg-\[\#10121b\],
+body[data-theme="warm-charcoal"] .bg-\[\#10121a\] {
+  background-color: #1b1814 !important;
+}
+body[data-theme="warm-charcoal"] .bg-\[\#181a22\],
+body[data-theme="warm-charcoal"] .bg-\[\#181a24\],
+body[data-theme="warm-charcoal"] .bg-\[\#1b1e27\],
+body[data-theme="warm-charcoal"] .bg-\[\#1a1d27\],
+body[data-theme="warm-charcoal"] .bg-\[\#1a1d28\],
+body[data-theme="warm-charcoal"] .bg-\[\#171a24\],
+body[data-theme="warm-charcoal"] .bg-\[\#15171f\],
+body[data-theme="warm-charcoal"] .bg-\[\#1f222d\],
+body[data-theme="warm-charcoal"] .bg-\[\#1f222c\],
+body[data-theme="warm-charcoal"] .bg-\[\#222634\],
+body[data-theme="warm-charcoal"] .bg-\[\#262a36\] {
+  background-color: #211e18 !important;
+}
+body[data-theme="warm-charcoal"] .border-\[\#252834\],
+body[data-theme="warm-charcoal"] .border-\[\#262a36\],
+body[data-theme="warm-charcoal"] .border-\[\#272b38\],
+body[data-theme="warm-charcoal"] .border-\[\#282c38\],
+body[data-theme="warm-charcoal"] .border-\[\#282d3b\],
+body[data-theme="warm-charcoal"] .border-\[\#282d3c\],
+body[data-theme="warm-charcoal"] .border-\[\#292e3e\],
+body[data-theme="warm-charcoal"] .border-\[\#2b3040\],
+body[data-theme="warm-charcoal"] .border-\[\#2c3140\],
+body[data-theme="warm-charcoal"] .border-\[\#2d3240\],
+body[data-theme="warm-charcoal"] .border-\[\#2e3342\],
+body[data-theme="warm-charcoal"] .border-\[\#303546\],
+body[data-theme="warm-charcoal"] .border-\[\#212430\] {
+  border-color: #342d24 !important;
+}
+body[data-theme="warm-charcoal"] .bg-indigo-600 {
+  background-color: #d97706 !important;
+}
+body[data-theme="warm-charcoal"] .hover\:bg-indigo-500:hover,
+body[data-theme="warm-charcoal"] .hover\:bg-indigo-600:hover {
+  background-color: #b45309 !important;
+}
+body[data-theme="warm-charcoal"] .text-indigo-400,
+body[data-theme="warm-charcoal"] .text-indigo-300,
+body[data-theme="warm-charcoal"] .text-indigo-200 {
+  color: #fbbf24 !important;
+}
+body[data-theme="warm-charcoal"] .bg-indigo-500\/15,
+body[data-theme="warm-charcoal"] .bg-indigo-500\/20,
+body[data-theme="warm-charcoal"] .bg-indigo-500\/25,
+body[data-theme="warm-charcoal"] .bg-indigo-600\/20 {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+}
+body[data-theme="warm-charcoal"] .border-indigo-500\/30,
+body[data-theme="warm-charcoal"] .border-indigo-500\/25,
+body[data-theme="warm-charcoal"] .border-indigo-500\/40 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+/* 3. BOSQUE NOCTURNO (Forest Night: Salvia & Oliva Oscuro) */
+body[data-theme="forest-night"] {
+  background-color: #0b1411 !important;
+  color: #d6e8df;
+}
+body[data-theme="forest-night"] ::-webkit-scrollbar-track {
+  background: #0b1411;
+}
+body[data-theme="forest-night"] ::-webkit-scrollbar-thumb {
+  background: #1b2e26;
+}
+body[data-theme="forest-night"] .bg-\[\#13151b\],
+body[data-theme="forest-night"] .bg-\[\#13151c\] {
+  background-color: #0b1411 !important;
+}
+body[data-theme="forest-night"] .bg-\[\#16181f\],
+body[data-theme="forest-night"] .bg-\[\#161822\],
+body[data-theme="forest-night"] .bg-\[\#14161f\],
+body[data-theme="forest-night"] .bg-\[\#141620\],
+body[data-theme="forest-night"] .bg-\[\#12141d\],
+body[data-theme="forest-night"] .bg-\[\#10121b\],
+body[data-theme="forest-night"] .bg-\[\#10121a\] {
+  background-color: #0f1c17 !important;
+}
+body[data-theme="forest-night"] .bg-\[\#181a22\],
+body[data-theme="forest-night"] .bg-\[\#181a24\],
+body[data-theme="forest-night"] .bg-\[\#1b1e27\],
+body[data-theme="forest-night"] .bg-\[\#1a1d27\],
+body[data-theme="forest-night"] .bg-\[\#1a1d28\],
+body[data-theme="forest-night"] .bg-\[\#171a24\],
+body[data-theme="forest-night"] .bg-\[\#15171f\],
+body[data-theme="forest-night"] .bg-\[\#1f222d\],
+body[data-theme="forest-night"] .bg-\[\#1f222c\],
+body[data-theme="forest-night"] .bg-\[\#222634\],
+body[data-theme="forest-night"] .bg-\[\#262a36\] {
+  background-color: #14251e !important;
+}
+body[data-theme="forest-night"] .border-\[\#252834\],
+body[data-theme="forest-night"] .border-\[\#262a36\],
+body[data-theme="forest-night"] .border-\[\#272b38\],
+body[data-theme="forest-night"] .border-\[\#282c38\],
+body[data-theme="forest-night"] .border-\[\#282d3b\],
+body[data-theme="forest-night"] .border-\[\#282d3c\],
+body[data-theme="forest-night"] .border-\[\#292e3e\],
+body[data-theme="forest-night"] .border-\[\#2b3040\],
+body[data-theme="forest-night"] .border-\[\#2c3140\],
+body[data-theme="forest-night"] .border-\[\#2d3240\],
+body[data-theme="forest-night"] .border-\[\#2e3342\],
+body[data-theme="forest-night"] .border-\[\#303546\],
+body[data-theme="forest-night"] .border-\[\#212430\] {
+  border-color: #1f392e !important;
+}
+body[data-theme="forest-night"] .bg-indigo-600 {
+  background-color: #059669 !important;
+}
+body[data-theme="forest-night"] .hover\:bg-indigo-500:hover,
+body[data-theme="forest-night"] .hover\:bg-indigo-600:hover {
+  background-color: #047857 !important;
+}
+body[data-theme="forest-night"] .text-indigo-400,
+body[data-theme="forest-night"] .text-indigo-300,
+body[data-theme="forest-night"] .text-indigo-200 {
+  color: #34d399 !important;
+}
+body[data-theme="forest-night"] .bg-indigo-500\/15,
+body[data-theme="forest-night"] .bg-indigo-500\/20,
+body[data-theme="forest-night"] .bg-indigo-500\/25,
+body[data-theme="forest-night"] .bg-indigo-600\/20 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+}
+body[data-theme="forest-night"] .border-indigo-500\/30,
+body[data-theme="forest-night"] .border-indigo-500\/25,
+body[data-theme="forest-night"] .border-indigo-500\/40 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
 

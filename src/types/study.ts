@@ -21,6 +21,26 @@ export interface ModuleDeliverable {
   notes?: string;
 }
 
+export interface ModulePdfGuide {
+  title: string;
+  totalPages: number;
+  author: string;
+  summary: string;
+  pages: {
+    pageNumber: number;
+    title: string;
+    sections: {
+      heading: string;
+      content?: string;
+      codeSnippet?: string;
+      bulletPoints?: string[];
+      callout?: string;
+    }[];
+  }[];
+  fileUrl?: string; // Optional custom user-uploaded PDF object/blob URL
+  fileName?: string;
+}
+
 export interface StudyModule {
   id: string;
   title: string;
@@ -33,6 +53,7 @@ export interface StudyModule {
   deliverable?: ModuleDeliverable;
   resources: StudyResource[];
   verification?: ModuleVerification;
+  pdfGuide?: ModulePdfGuide;
 }
 
 export interface StudyPhase {
@@ -45,6 +66,28 @@ export interface StudyPhase {
   modules: StudyModule[];
 }
 
+export interface LabStep {
+  stepNumber: number;
+  title: string;
+  duration: string;
+  explanation: string;
+  commandOrSnippet?: string;
+  commandLanguage?: string;
+  deliverableCheck?: string;
+}
+
+export interface LabGuide {
+  objective: string;
+  scenario: string;
+  estimatedHours: number;
+  difficulty: 'Intermedio' | 'Avanzado' | 'Experto';
+  prerequisites: string[];
+  architectureOverview: string;
+  steps: LabStep[];
+  verificationChecklist: string[];
+  suggestedDeliverableRepo: string;
+}
+
 export interface PortfolioProject {
   id: string;
   phaseNumber: number;
@@ -55,6 +98,25 @@ export interface PortfolioProject {
   repoUrl?: string;
   liveUrl?: string;
   notes?: string;
+  labGuide?: LabGuide;
+  completedStepIndexes?: number[];
+}
+
+export interface StudyMaterial {
+  id: string;
+  roadmapId: string;
+  phaseId?: string;
+  moduleId?: string;
+  title: string;
+  type: 'PDF' | 'Guía' | 'Código' | 'Video' | 'Cheatsheet' | 'Enlace';
+  description: string;
+  url?: string;
+  fileData?: string; // Data URL or text content
+  fileName?: string;
+  fileSize?: string;
+  tags: string[];
+  createdAt: string;
+  author?: string;
 }
 
 export interface StudyRoadmap {
@@ -119,7 +181,19 @@ export interface ChatMessage {
 }
 
 export type MentorPersona =
-  | 'architect' // SOLID & Clean Architecture
-  | 'roadmap_master' // Gestor del Plan de Estudios - IA y Automatización
-  | 'frontend_ux' // Diseñador UX/UI & Frontend
-  | 'productivity_coach'; // Planificación y hábitos
+  | 'roadmap_master' // Gestor de la Carrera - IA y Automatización
+  | 'automation_engineer' // Automatización de Flujos (n8n, APIs, Webhooks)
+  | 'ai_engineer' // Modelos de IA, LangGraph, RAG y Agentes Autónomos
+  | 'productivity_coach'; // Planificación y hábitos de estudio
+
+export type ThemePalette = 'slate-calm' | 'nord-dark' | 'warm-charcoal' | 'forest-night';
+
+export interface ThemeConfig {
+  id: ThemePalette;
+  name: string;
+  badge: string;
+  solidAccent: string;
+  accentColor: string;
+  textColor: string;
+  description: string;
+}

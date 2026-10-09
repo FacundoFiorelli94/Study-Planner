@@ -12,9 +12,12 @@ import {
   Timer,
   Sliders,
   ChevronRight,
+  Globe,
+  Mic,
 } from 'lucide-react';
 import { ApiService } from '../../services/apiService';
 import { NotificationEngine } from '../../services/notificationEngine';
+import { AudioTranscriberButton } from '../audio/AudioTranscriberButton';
 
 interface QuickDemoCardProps {
   onSwitchToFullApp: () => void;
@@ -42,8 +45,9 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
 
   // Step 4: Mini Gemini Mentor
   const [aiQuestion, setAiQuestion] = useState('');
+  const [useSearchInDemo, setUseSearchInDemo] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(
-    '¡Hola! Soy tu mentor IA. Puedo organizar tu plan de estudio según tus 8 horas semanales o resolver dudas de código.'
+    '¡Hola! Soy tu mentor IA. Puedes preguntarme cómo organizar tus 8h semanales, activar búsqueda en Google, o usar el micrófono para dictarme tu duda.'
   );
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -59,12 +63,12 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
 
   const handleTriggerNotification = () => {
     const msg = `Recordatorio Automático: Tienes 90 min de estudio pendientes para hoy según tu meta de ${demoHours}h/sem.`;
-    NotificationEngine.triggerInAppOrSystem('Aviso de Estudio Kamino', msg, 'reminder');
+    NotificationEngine.triggerInAppOrSystem('Aviso de Estudio Study Planner', msg, 'reminder');
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4500);
   };
 
-  const handleAskMentor = async (textPrompt?: string) => {
+  const handleAskMentor = async (textPrompt?: string, forceSearch = false) => {
     const q = textPrompt || aiQuestion;
     if (!q.trim() || aiLoading) return;
 
@@ -74,7 +78,8 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
       const res = await ApiService.sendChatMessage({
         messages: [{ role: 'user', text: q }],
         model: 'gemini-3.5-flash',
-        systemInstruction: `Eres un mentor conciso y directo para una demostración rápida de la app. Responde en 2 o 3 oraciones precisas en español.`,
+        useGoogleSearch: forceSearch || useSearchInDemo,
+        systemInstruction: `Eres un mentor conciso y directo para una demostración rápida de la app. Responde en 2 o 3 oraciones precisas en español. Si se usa Google Search, resume los hallazgos recientes.`,
       });
       setAiResponse(res.response);
       setAiQuestion('');
@@ -86,34 +91,34 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-8 max-w-5xl mx-auto my-4">
+    <div className="bg-[#181a22] border border-[#262a36] rounded-2xl p-6 sm:p-7 space-y-6 max-w-5xl mx-auto my-4 text-slate-200 transition-colors">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-3 text-xs animate-in slide-in-from-top-4">
+        <div className="fixed top-20 right-6 z-50 bg-[#222634] text-slate-100 px-4 py-2.5 rounded-xl shadow-lg border border-[#383e52] flex items-center gap-2.5 text-xs">
           <Bell className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>{toastMessage}</span>
+          <span className="font-medium">{toastMessage}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#252836] pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
-            <Sparkles className="w-4 h-4 text-amber-600" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Demostración Express Reducida</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+          <h2 className="text-xl font-bold text-slate-100 tracking-tight">
             Prueba Interactiva en 4 Pasos Clave
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Experimenta el funcionamiento esencial: planificación según tiempo, progreso visual, notificaciones y mentoría IA.
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Experimenta el funcionamiento esencial: planificación según tiempo disponible, progreso visual en vivo, alertas automáticas y mentoría IA con dictado por voz y búsqueda web.
           </p>
         </div>
 
         <button
           type="button"
           onClick={onSwitchToFullApp}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-colors shrink-0 shadow-sm"
         >
           <span>Abrir Plataforma Completa (30 Semanas)</span>
           <ArrowRight className="w-4 h-4" />
@@ -121,21 +126,21 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
       </div>
 
       {/* 4 Interactive Pillars Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Pillar 1: Time Customizer */}
-        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+        <div className="p-5 bg-[#1d202a] rounded-xl border border-[#2b303e] space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center font-bold">1</span>
-              <span>Planificador Adaptativo</span>
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-200">
+              <span className="w-6 h-6 rounded-md bg-[#272b37] border border-[#353b4c] text-slate-300 text-xs flex items-center justify-center font-bold">1</span>
+              <span className="text-sm font-bold text-slate-100">Planificador Adaptativo</span>
             </div>
-            <span className="text-xs font-bold text-amber-800 tabular-nums">
+            <span className="text-xs font-semibold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1 rounded-lg tabular-nums">
               {demoHours} horas / semana
             </span>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs text-slate-600 block">
+            <label className="text-xs text-slate-300 font-medium block">
               Mueve el slider para ajustar tu tiempo libre disponible:
             </label>
             <input
@@ -145,49 +150,49 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
               step="2"
               value={demoHours}
               onChange={(e) => setDemoHours(Number(e.target.value))}
-              className="w-full accent-slate-900 cursor-pointer"
+              className="w-full accent-indigo-500 cursor-pointer h-2 bg-[#252834] rounded-lg"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 tabular-nums">
+            <div className="flex justify-between text-[11px] text-slate-400 font-medium tabular-nums">
               <span>4h (Poco tiempo)</span>
-              <span>12h (Medio)</span>
-              <span>24h (Full-time)</span>
+              <span className="text-indigo-400 font-semibold">12h (Balanceado)</span>
+              <span>24h (Intensivo)</span>
             </div>
           </div>
 
           {/* Dynamic Calculation Result */}
-          <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
-            <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
+          <div className="p-3 bg-[#161820] rounded-xl border border-[#272b38] text-xs space-y-1">
+            <div className="font-semibold text-indigo-300 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-indigo-400" />
               <span>Cálculo Inteligente en Tiempo Real:</span>
             </div>
-            <p className="text-slate-600">
-              Completarás esta etapa en <strong className="text-slate-900 font-bold tabular-nums">{projectedWeeks} semanas</strong> dedicando{' '}
-              <strong className="text-slate-900 font-bold tabular-nums">{(demoHours / 4).toFixed(1)}h</strong> por día (4 sesiones/semana).
+            <p className="text-slate-300 leading-relaxed">
+              Completarás esta etapa en <strong className="text-slate-100 font-semibold tabular-nums">{projectedWeeks} semanas</strong> dedicando{' '}
+              <strong className="text-slate-100 font-semibold tabular-nums">{(demoHours / 4).toFixed(1)}h</strong> por día (4 sesiones/semana).
             </p>
           </div>
         </div>
 
         {/* Pillar 2: Visual Progress Tracker */}
-        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+        <div className="p-5 bg-[#1d202a] rounded-xl border border-[#2b303e] space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center font-bold">2</span>
-              <span>Seguimiento de Progreso en Vivo</span>
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-200">
+              <span className="w-6 h-6 rounded-md bg-[#272b37] border border-[#353b4c] text-slate-300 text-xs flex items-center justify-center font-bold">2</span>
+              <span className="text-sm font-bold text-slate-100">Seguimiento de Progreso</span>
             </div>
-            <span className="text-xs font-bold text-emerald-800 tabular-nums">
+            <span className="text-xs font-semibold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-lg tabular-nums">
               {progressPct}% completado
             </span>
           </div>
 
-          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-[#252834] h-2 rounded-full overflow-hidden">
             <div
-              className="bg-emerald-600 h-full rounded-full transition-all duration-300"
+              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
 
           <div className="space-y-2">
-            <span className="text-[11px] font-semibold text-slate-500 block">
+            <span className="text-[11px] font-semibold text-slate-300 block">
               Haz clic para marcar o desmarcar hitos:
             </span>
             {milestones.map((m) => (
@@ -195,19 +200,19 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
                 key={m.id}
                 type="button"
                 onClick={() => toggleMilestone(m.id)}
-                className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs ${
+                className={`w-full text-left p-2.5 rounded-xl border transition-colors flex items-center justify-between text-xs ${
                   m.done
-                    ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950 font-medium'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 font-medium'
+                    : 'bg-[#161820] border-[#272b38] text-slate-300 hover:bg-[#202431]'
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <CheckCircle2
-                    className={`w-4 h-4 ${m.done ? 'text-emerald-600' : 'text-slate-300'}`}
+                    className={`w-4 h-4 ${m.done ? 'text-emerald-400' : 'text-slate-500'}`}
                   />
                   <span>{m.title}</span>
                 </div>
-                <span className="text-[10px] text-slate-400 tabular-nums font-mono">
+                <span className="text-[11px] text-slate-400 tabular-nums font-mono">
                   {m.hours}h
                 </span>
               </button>
@@ -216,61 +221,61 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
         </div>
 
         {/* Pillar 3: Pomodoro & Automatic Notifications */}
-        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+        <div className="p-5 bg-[#1d202a] rounded-xl border border-[#2b303e] space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center font-bold">3</span>
-              <span>Notificaciones & Temporizador</span>
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-200">
+              <span className="w-6 h-6 rounded-md bg-[#272b37] border border-[#353b4c] text-slate-300 text-xs flex items-center justify-center font-bold">3</span>
+              <span className="text-sm font-bold text-slate-100">Notificaciones & Foco</span>
             </div>
-            <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-xs text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-amber-400" />
               <span>Racha: 3 días</span>
             </span>
           </div>
 
-          <p className="text-xs text-slate-600">
-            Comprueba cómo el sistema te avisa y registra automáticamente tus minutos de concentración.
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Comprueba cómo el sistema te avisa y registra automáticamente tus minutos de concentración activa.
           </p>
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             <button
               type="button"
               onClick={handleTriggerNotification}
-              className="p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-left transition-all space-y-1 shadow-2xs"
+              className="p-3 bg-[#161820] hover:bg-[#202431] border border-[#272b38] hover:border-amber-500/30 rounded-xl text-left transition-colors space-y-1 group"
             >
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                <Bell className="w-3.5 h-3.5 text-amber-500" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition-colors">
+                <Bell className="w-4 h-4 text-amber-400" />
                 <span>Simular Alerta</span>
               </div>
-              <span className="text-[11px] text-slate-500 block leading-tight">
-                Dispara una notificación automática en pantalla
+              <span className="text-[11px] text-slate-400 block leading-tight">
+                Dispara una notificación emergente en vivo
               </span>
             </button>
 
             <button
               type="button"
               onClick={onOpenTimerModal}
-              className="p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-left transition-all space-y-1 shadow-2xs"
+              className="p-3 bg-[#161820] hover:bg-[#202431] border border-[#272b38] hover:border-indigo-500/30 rounded-xl text-left transition-colors space-y-1 group"
             >
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                <Timer className="w-3.5 h-3.5 text-slate-800" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors">
+                <Timer className="w-4 h-4 text-indigo-400" />
                 <span>Abrir Pomodoro</span>
               </div>
-              <span className="text-[11px] text-slate-500 block leading-tight">
-                Bloques de 25/45m con registro de avance
+              <span className="text-[11px] text-slate-400 block leading-tight">
+                Bloques de 25/45m con registro de tiempo
               </span>
             </button>
           </div>
         </div>
 
         {/* Pillar 4: Mini Gemini Mentor */}
-        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+        <div className="p-5 bg-[#1d202a] rounded-xl border border-[#2b303e] space-y-3.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <span className="w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center font-bold">4</span>
-              <span>Mentor IA Multi-Turn</span>
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-200">
+              <span className="w-6 h-6 rounded-md bg-[#272b37] border border-[#353b4c] text-slate-300 text-xs flex items-center justify-center font-bold">4</span>
+              <span className="text-sm font-bold text-slate-100">Mentor IA con Voz & Búsqueda</span>
             </div>
-            <span className="text-[11px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+            <span className="text-[11px] font-semibold text-sky-300 bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 rounded-lg">
               Gemini 3.5 Flash
             </span>
           </div>
@@ -280,46 +285,50 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
             <button
               type="button"
               onClick={() => handleAskMentor('¿Cómo distribuir 8 horas semanales para no procrastinar?')}
-              className="text-[11px] bg-white border border-slate-200 hover:border-slate-300 text-slate-700 px-2.5 py-1 rounded-lg transition-colors"
+              className="text-[11px] bg-[#161820] hover:bg-[#202431] border border-[#282d3b] text-slate-300 hover:text-white px-2.5 py-1 rounded-lg transition-colors font-medium"
             >
               💡 Distribuir 8h/semana
             </button>
             <button
               type="button"
-              onClick={() => handleAskMentor('¿Por qué es clave JSON Schema antes de programar agentes?')}
-              className="text-[11px] bg-white border border-slate-200 hover:border-slate-300 text-slate-700 px-2.5 py-1 rounded-lg transition-colors"
+              onClick={() => handleAskMentor('¿Cuáles son las últimas novedades de LangGraph en 2026?', true)}
+              className="text-[11px] bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-300 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 font-medium"
             >
-              ⚡ ¿Por qué JSON Schema?
+              <Globe className="w-3 h-3 text-sky-400" />
+              <span>Novedades LangGraph (Google Search)</span>
             </button>
           </div>
 
           {/* Chat Response Display */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 min-h-[75px] text-xs text-slate-800 leading-relaxed">
+          <div className="bg-[#161820] p-3.5 rounded-xl border border-[#272b38] border-l-2 border-l-sky-500 min-h-[75px] text-xs text-slate-300 leading-relaxed">
             {aiLoading ? (
-              <div className="flex items-center gap-2 text-slate-500">
-                <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                <span>Gemini pensando respuesta...</span>
+              <div className="flex items-center gap-2 text-sky-400 font-medium">
+                <div className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
+                <span>Gemini procesando respuesta...</span>
               </div>
             ) : (
               <p>{aiResponse}</p>
             )}
           </div>
 
-          {/* Question input */}
+          {/* Question input with Audio Transcription Mic */}
           <div className="flex items-center gap-2 pt-1">
             <input
               type="text"
-              placeholder="Hazle una pregunta a tu tutor..."
+              placeholder="Haz una pregunta o usa el micrófono para dictar..."
               value={aiQuestion}
               onChange={(e) => setAiQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskMentor()}
-              className="flex-1 text-xs p-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+              className="flex-1 text-xs p-2.5 rounded-xl border border-[#2b303e] bg-[#161820] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
+            {/* Audio transcription button using gemini-3.5-transcribe */}
+            <AudioTranscriberButton onTranscription={(text) => setAiQuestion((prev) => (prev ? `${prev} ${text}` : text))} />
+
             <button
               type="button"
               onClick={() => handleAskMentor()}
               disabled={aiLoading || !aiQuestion.trim()}
-              className="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-40 transition-colors"
+              className="p-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl disabled:opacity-40 transition-colors shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -328,17 +337,20 @@ export const QuickDemoCard: React.FC<QuickDemoCardProps> = ({
       </div>
 
       {/* Footer Call to Action */}
-      <div className="p-4 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-5 bg-[#1d202a] text-slate-200 rounded-xl border border-[#2b303e] flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-center sm:text-left">
-          <h4 className="text-sm font-bold">¿Listo para ver toda la estructura?</h4>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Explora las 6 fases (30 semanas), el portafolio de 3 proyectos, el calendario interactivo y los 4 roles del mentor con High Thinking.
+          <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2 justify-center sm:justify-start">
+            <span>¿Listo para sumergirte en la Carrera de IA y Automatización?</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          </h4>
+          <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
+            Accede a las 6 fases estructuradas, el portafolio de 3 proyectos, el calendario inteligente y los 4 roles del mentor con Thinking Mode de alta profundidad.
           </p>
         </div>
         <button
           type="button"
           onClick={onSwitchToFullApp}
-          className="px-5 py-2 text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl transition-colors whitespace-nowrap shadow-sm"
+          className="px-5 py-2.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors whitespace-nowrap shadow-sm"
         >
           Explorar Aplicación Completa
         </button>

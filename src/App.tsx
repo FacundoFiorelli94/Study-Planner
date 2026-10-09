@@ -8,6 +8,7 @@ import {
   ModuleStatus,
   ModuleVerification,
   PortfolioProject,
+  ThemePalette,
 } from './types/study';
 import { StorageService } from './services/storageService';
 import { NotificationEngine } from './services/notificationEngine';
@@ -23,12 +24,24 @@ import { CreateRoadmapModal } from './components/modals/CreateRoadmapModal';
 import { QuickDemoCard } from './components/demo/QuickDemoCard';
 
 export default function App() {
+  const [currentTheme, setCurrentTheme] = useState<ThemePalette>(() => StorageService.getThemePalette());
   const [isDemoMode, setIsDemoMode] = useState(true);
   const [currentTab, setCurrentTab] = useState<'roadmap' | 'planner' | 'progress' | 'chat'>('roadmap');
   const [allRoadmaps, setAllRoadmaps] = useState<StudyRoadmap[]>(() => StorageService.getRoadmaps());
   const [activeRoadmap, setActiveRoadmap] = useState<StudyRoadmap>(() => StorageService.getActiveRoadmap());
   const [sessions, setSessions] = useState<ScheduledSession[]>(() => StorageService.getSessions());
   const [notifications, setNotifications] = useState<StudyNotification[]>(() => StorageService.getNotifications());
+
+  // Apply theme to body
+  useEffect(() => {
+    document.body.setAttribute('data-theme', currentTheme);
+  }, [currentTheme]);
+
+  const handleSelectTheme = (newTheme: ThemePalette) => {
+    setCurrentTheme(newTheme);
+    StorageService.saveThemePalette(newTheme);
+    document.body.setAttribute('data-theme', newTheme);
+  };
 
   // Modals state
   const [isTimerOpen, setIsTimerOpen] = useState(false);
@@ -284,6 +297,12 @@ export default function App() {
     setAllRoadmaps(all);
   };
 
+  const handleToggleLabStep = (projectId: string, stepIndex: number) => {
+    const updated = StorageService.toggleProjectLabStep(activeRoadmap.id, projectId, stepIndex);
+    setActiveRoadmap(updated);
+    setAllRoadmaps(StorageService.getRoadmaps());
+  };
+
   // Handle new roadmap created
   const handleRoadmapCreated = (newRoadmap: StudyRoadmap) => {
     StorageService.addRoadmap(newRoadmap);
@@ -302,7 +321,13 @@ export default function App() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans">
+    <div
+      className={`${
+        currentTab === 'chat' && !isDemoMode
+          ? 'h-screen overflow-hidden'
+          : 'min-h-screen'
+      } bg-[#13151b] text-slate-200 flex flex-col font-sans transition-colors duration-300`}
+    >
       {/* Top Navbar */}
       <Navbar
         currentTab={currentTab}
@@ -320,10 +345,18 @@ export default function App() {
         activeRoadmapTitle={activeRoadmap.title}
         isDemoMode={isDemoMode}
         onToggleDemoMode={() => setIsDemoMode(!isDemoMode)}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
       />
 
       {/* Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <main
+        className={`flex-1 w-full mx-auto ${
+          currentTab === 'chat' && !isDemoMode
+            ? 'h-[calc(100vh-4rem)] max-w-6xl p-2 sm:p-3 overflow-hidden flex flex-col'
+            : 'max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6'
+        }`}
+      >
         {isDemoMode ? (
           <QuickDemoCard
             onSwitchToFullApp={() => setIsDemoMode(false)}
@@ -348,6 +381,8 @@ export default function App() {
                 onOpenEvaluateModal={handleOpenEvaluateModal}
                 onStartFocusSession={handleStartFocusSession}
                 onUpdatePaceAndBudget={handleUpdatePaceAndBudget}
+                onUpdateProjectStatus={handleUpdateProjectStatus}
+                onToggleLabStep={handleToggleLabStep}
               />
             )}
 
@@ -367,6 +402,7 @@ export default function App() {
               <ProgressDashboard
                 roadmap={activeRoadmap}
                 onUpdateProjectStatus={handleUpdateProjectStatus}
+                onToggleLabStep={handleToggleLabStep}
                 onDataImported={() => {
                   setActiveRoadmap(StorageService.getActiveRoadmap());
                   setAllRoadmaps(StorageService.getRoadmaps());

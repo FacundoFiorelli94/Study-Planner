@@ -1,8 +1,9 @@
 import { StudyRoadmap } from '../types/study';
+import { MODULE_PDF_GUIDES } from './moduleGuides';
 
 export const FLAGSHIP_AI_AUTOMATION_ROADMAP: StudyRoadmap = {
   id: 'roadmap-ai-automation-30w',
-  title: 'Plan Maestro de 30 Semanas: IA y Automatización',
+  title: 'Carrera de IA y Automatización',
   description: 'Ruta integral para dominar la ingeniería de automatización con inteligencia artificial, arquitecturas ReAct, grafos de estado con LangGraph, backends en Python y MLOps.',
   category: 'Inteligencia Artificial & Automatización',
   totalWeeks: 30,
@@ -18,25 +19,311 @@ export const FLAGSHIP_AI_AUTOMATION_ROADMAP: StudyRoadmap = {
       id: 'proj-1',
       phaseNumber: 2,
       requiredWeek: 14,
-      title: 'Proyecto 1: Automatización Operativa End-to-End',
-      description: 'Orquestación de flujos de negocio integrando webhooks, manejo de errores try/catch, transformación de datos JSON y notificaciones automatizadas con n8n y Make.',
+      title: 'Laboratorio 1: Automatización Operativa y Flujos de Eventos Resilientes',
+      description: 'Orquestación de flujos de negocio en n8n integrando Webhooks transaccionales, manejo de errores Try/Catch, transformación de datos JSON, enriquecimiento con IA y alertas multicanal.',
       status: 'pending',
+      labGuide: {
+        objective: 'Construir e implementar un sistema de automatización empresarial autónomo con n8n, capaz de procesar eventos de entrada, enriquecerlos con modelos Gemini y recuperarse ante caídas de APIs externas con tolerancia a fallas.',
+        scenario: 'Una empresa fintech recibe solicitudes de clientes a través de múltiples canales. Tu misión como Ingeniero de Automatización es implementar un orquestador que reciba los webhooks, verifique la firma de seguridad, clasifique la urgencia con IA, actualice el CRM y notifique por Slack/Telegram con reintentos y Dead-Letter Queue.',
+        estimatedHours: 15,
+        difficulty: 'Intermedio',
+        prerequisites: [
+          'Docker y Docker Compose instalados en máquina local',
+          'Instancia de n8n corriendo (puerto 5678) o cuenta n8n Cloud',
+          'API Key de Google Gemini o OpenAI',
+          'Postman / cURL para pruebas de estrés de webhooks'
+        ],
+        architectureOverview: 'Arquitectura dirigida por eventos (Event-Driven): Webhook Trigger -> Validar Firma HMAC -> Nodo Code (Normalización JSON Schema) -> AI Agent Node (Clasificación & Sentiment) -> Branch Condicional -> Nodo HTTP (Persistencia CRM) -> Error Trigger (Dead Letter Queue & Alerta Slack).',
+        steps: [
+          {
+            stepNumber: 1,
+            title: 'Despliegue de Infraestructura y Configuración de Red',
+            duration: '1.5 horas',
+            explanation: 'Levantar el contenedor de n8n con persistencia en volumen local, configurar variables de entorno críticas y exponer el puerto 5678 de forma segura.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `docker run -d --name n8n-lab \\
+  -p 5678:5678 \\
+  -e N8N_HOST=localhost \\
+  -e N8N_PORT=5678 \\
+  -e N8N_PROTOCOL=http \\
+  -e WEBHOOK_URL=http://localhost:5678/ \\
+  -v ~/.n8n:/home/node/.n8n \\
+  n8nio/n8n:latest`,
+            deliverableCheck: 'Acceder a http://localhost:5678 y verificar la consola de administración activa.'
+          },
+          {
+            stepNumber: 2,
+            title: 'Configuración del Webhook Receptor & Validación de Firma',
+            duration: '2.5 horas',
+            explanation: 'Crear el nodo Webhook en n8n con método POST. Validar que la cabecera X-Signature coincida con el hash SHA-256 del cuerpo de la petición para evitar spoofing.',
+            commandLanguage: 'javascript',
+            commandOrSnippet: `// Validación en nodo Code (JavaScript)
+const crypto = require('crypto');
+const secret = $env.WEBHOOK_SECRET;
+const signature = $input.item.json.headers['x-signature'];
+const body = JSON.stringify($input.item.json.body);
+
+const expectedSignature = crypto.createHmac('sha256', secret).update(body).digest('hex');
+if (signature !== expectedSignature) {
+  throw new Error('Firma de webhook inválida. Petición abortada.');
+}
+return $input.item;`,
+            deliverableCheck: 'Prueba con cURL enviando firma válida (HTTP 200) e inválida (HTTP 403).'
+          },
+          {
+            stepNumber: 3,
+            title: 'Enriquecimiento Inteligente con Gemini & LangChain Node',
+            duration: '3.5 horas',
+            explanation: 'Integrar el nodo AI Agent de n8n utilizando el modelo gemini-2.5-flash para extraer entidades (nombre, intención, monto, urgencia) y estructurar en JSON canónico.',
+            commandLanguage: 'json',
+            commandOrSnippet: `{\n  "prompt": "Analiza el mensaje entrante y clasifícalo estrictamente en JSON con claves: intent (support|sales|billing), urgency (high|medium|low), sentiment (positive|neutral|negative)",\n  "temperature": 0.1\n}`,
+            deliverableCheck: 'El nodo de IA clasifica correctamente 5 casos de prueba de mensajes de usuarios.'
+          },
+          {
+            stepNumber: 4,
+            title: 'Estrategia de Error Handling: Try/Catch & Dead Letter Queue',
+            duration: '3.0 horas',
+            explanation: 'Implementar el Error Trigger Workflow de n8n. Si la API de destino responde 5xx o timeout, enviar el payload a una tabla de contingencia en Postgres y alertar a canal de soporte con stack trace.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `# Simulación de fallo en endpoint destino para verificar el Dead-Letter Queue
+curl -X POST http://localhost:5678/webhook/leads-incoming \\
+  -H "Content-Type: application/json" \\
+  -d '{"client_id": "test-error-500", "payload": "simulate_failure"}'`,
+            deliverableCheck: 'Verificar la recepción de alerta de fallo con detalles en Slack y registro en DB.'
+          },
+          {
+            stepNumber: 5,
+            title: 'Empaquetado, Documentación y Publicación en GitHub',
+            duration: '2.5 horas',
+            explanation: 'Exportar el workflow en formato JSON sanitizado (sin claves API), redactar el archivo README.md con el diagrama de arquitectura y publicar el repositorio.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `git init
+git add README.md workflow-n8n-production.json docker-compose.yml
+git commit -m "feat: Orquestador operativo con n8n, Gemini y manejo de errores"
+git remote add origin https://github.com/tu-usuario/n8n-resilient-automation
+git push -u origin main`,
+            deliverableCheck: 'Repositorio público con instrucciones de despliegue en 1 comando.'
+          }
+        ],
+        verificationChecklist: [
+          'Workflow exportado como archivo .json validado y funcional.',
+          'Uso de variables de entorno para todas las credenciales sensibles.',
+          'Manejo de errores que captura fallos 5xx sin interrumpir el servidor.',
+          'Clasificación con IA operando con temperatura baja (<= 0.2).',
+          'README con diagrama Mermaid y guía de ejecución local.'
+        ],
+        suggestedDeliverableRepo: 'https://github.com/tu-usuario/n8n-resilient-automation'
+      }
     },
     {
       id: 'proj-2',
       phaseNumber: 4,
       requiredWeek: 26,
-      title: 'Proyecto 2: Agente RAG Especializado con Citas Explícitas',
-      description: 'Arquitectura ReAct con LangGraph, base de datos vectorial en PostgreSQL con pgvector, memoria de conversación de largo plazo y citas estructuradas.',
+      title: 'Laboratorio 2: Agente RAG Autónomo con LangGraph & pgvector',
+      description: 'Implementación de un agente conversacional con arquitectura ReAct en LangGraph, base de datos vectorial en PostgreSQL con pgvector, memoria de contexto persistente y citas explícitas.',
       status: 'pending',
+      labGuide: {
+        objective: 'Construir un agente de búsqueda y razonamiento (RAG) con LangGraph que consulte documentación técnica, valide alucinaciones mediante nodos de control de calidad y cite exactamente las fuentes de cada afirmación.',
+        scenario: 'Un equipo de ingenieros necesita un asistente que responda consultas complejas sobre especificaciones de arquitectura y contratos API. Si el agente alucina, puede causar errores costosos en producción. Desarrollarás un StateGraph con detección de respuestas espurias y autocorrección.',
+        estimatedHours: 20,
+        difficulty: 'Avanzado',
+        prerequisites: [
+          'Python 3.11+ y Poetry / uv instalados',
+          'PostgreSQL 16 con extensión pgvector instalada',
+          'Google GenAI SDK o OpenAI API Key',
+          'Familiaridad con LangGraph StateGraph y Pydantic v2'
+        ],
+        architectureOverview: 'Pipeline de Grafo Cíclico: User Query -> Retrieve (pgvector HNSW) -> Grade Documents -> Generate Answer -> Hallucination Checker (Conditional Edge) -> Si aprueba: End con citas; Si falla: Re-escribir query o regenerar.',
+        steps: [
+          {
+            stepNumber: 1,
+            title: 'Base de Datos Vectorial: Setup de PostgreSQL + pgvector',
+            duration: '2.0 horas',
+            explanation: 'Configurar contenedor Docker con pgvector, crear la tabla de fragmentos con columna embedding vector(768) e índice HNSW para búsqueda coseno.',
+            commandLanguage: 'sql',
+            commandOrSnippet: `CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE technical_chunks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    doc_title VARCHAR(255) NOT NULL,
+    chunk_index INT NOT NULL,
+    content TEXT NOT NULL,
+    embedding vector(768)
+);
+
+CREATE INDEX ON technical_chunks USING hnsw (embedding vector_cosine_ops);`,
+            deliverableCheck: 'Consultar "SELECT * FROM pg_extension WHERE extname = \'vector\';" retornando 1 fila.'
+          },
+          {
+            stepNumber: 2,
+            title: 'Pipeline de Ingestión & Chunking Semántico',
+            duration: '3.5 horas',
+            explanation: 'Desarrollar script Python para segmentar documentos en bloques de 500 tokens con overlap de 50 tokens y calcular embeddings con text-embedding-004.',
+            commandLanguage: 'python',
+            commandOrSnippet: `from google import genai
+import psycopg
+
+ai = genai.Client()
+
+def embed_text(text: str) -> list[float]:
+    result = ai.models.embed_content(
+        model="text-embedding-004",
+        contents=text
+    )
+    return result.embeddings[0].values`,
+            deliverableCheck: 'Al menos 100 fragmentos indexados correctamente en la base de datos.'
+          },
+          {
+            stepNumber: 3,
+            title: 'Construcción del StateGraph con LangGraph',
+            duration: '5.0 horas',
+            explanation: 'Definir el estado tipado TypedDict y enlazar los nodos de recuperación, evaluación de relevancia y generación con branching condicional.',
+            commandLanguage: 'python',
+            commandOrSnippet: `from langgraph.graph import StateGraph, END
+from typing import TypedDict, List
+
+class RAGState(TypedDict):
+    query: str
+    documents: List[dict]
+    answer: str
+    citations: List[str]
+    is_grounded: bool
+
+graph = StateGraph(RAGState)
+graph.add_node("retrieve", retrieve_node)
+graph.add_node("grade_docs", grade_docs_node)
+graph.add_node("generate", generate_node)
+graph.add_node("verify_grounding", verify_grounding_node)
+
+graph.set_entry_point("retrieve")
+graph.add_edge("retrieve", "grade_docs")
+graph.add_edge("grade_docs", "generate")
+graph.add_edge("generate", "verify_grounding")
+graph.add_conditional_edges("verify_grounding", check_grounding_decision, {"pass": END, "retry": "generate"})`,
+            deliverableCheck: 'El grafo compila sin ciclos infinitos y se ejecuta correctamente con mocks.'
+          },
+          {
+            stepNumber: 4,
+            title: 'Mecanismo de Citas Estructuradas y Verificación',
+            duration: '4.5 horas',
+            explanation: 'Forzar mediante responseSchema que la respuesta contenga citas formales con formato [Doc, Seccion, Fragmento] vinculadas a los metadatos de Postgres.',
+            commandLanguage: 'python',
+            commandOrSnippet: `class CitationAnswer(BaseModel):
+    summary: str
+    claims: list[dict] # { claim: str, source_doc: str, chunk_id: str }
+    unanswered_aspects: list[str]`,
+            deliverableCheck: 'El agente responde con citas verificables y rechaza contestar cuando la información no está en los documentos.'
+          },
+          {
+            stepNumber: 5,
+            title: 'API FastAPI, Pruebas y Despliegue',
+            duration: '3.0 horas',
+            explanation: 'Exponer el grafo a través de un endpoint streaming en FastAPI con soporte para WebSockets o Server-Sent Events (SSE).',
+            commandLanguage: 'bash',
+            commandOrSnippet: `poetry run pytest tests/test_rag_agent.py -v
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`,
+            deliverableCheck: 'Endpoint /api/v1/chat respondiendo en streaming con citas estructuradas.'
+          }
+        ],
+        verificationChecklist: [
+          'PostgreSQL con pgvector e índice HNSW operativo.',
+          'StateGraph de LangGraph con detección y recuperación ante alucinaciones.',
+          'Citas explícitas en cada afirmación técnica.',
+          'Test suite con pytest evaluando al menos 5 preguntas complejas.',
+          'README con diagrama del grafo y documentación de setup.'
+        ],
+        suggestedDeliverableRepo: 'https://github.com/tu-usuario/langgraph-rag-pgvector-agent'
+      }
     },
     {
       id: 'proj-3',
       phaseNumber: 5,
       requiredWeek: 30,
-      title: 'Proyecto 3: Dashboard de Métricas de Impacto y ROI de IA',
-      description: 'Trazabilidad y observabilidad integral con LangSmith, monitorización financiera de costo de tokens, puntos de intervención humana (Human-in-the-loop) y cálculo de ROI.',
+      title: 'Laboratorio 3: Dashboard de Métricas de Impacto, Telemetría LangSmith & FinOps',
+      description: 'Sistema integral de observabilidad con LangSmith, trazabilidad de llamadas a LLMs, monitorización financiera de costo de tokens, puntos de corte Human-in-the-Loop y cálculo de ROI.',
       status: 'pending',
+      labGuide: {
+        objective: 'Construir un panel de control y observabilidad empresarial para sistemas de IA en producción, monitoreando latencias, consumo financiero de tokens, precisión semántica y cálculo de retorno de inversión (ROI) para la alta gerencia.',
+        scenario: 'Tu organización ha puesto en producción múltiples agentes de IA. La gerencia financiera exige visibilidad total de los costos de inferencia en tiempo real, control de riesgos para acciones delicadas (Human-in-the-loop) y reportes de ahorro generado frente a horas de consultoría.',
+        estimatedHours: 20,
+        difficulty: 'Experto',
+        prerequisites: [
+          'Cuenta activa en LangSmith (smith.langchain.com)',
+          'Backend en FastAPI o Node.js con métricas Prometheus / OpenTelemetry',
+          'Frontend moderno para dashboard (React / Vite o Streamlit)',
+          'Agentes de los Laboratorios 1 y 2 listos para instrumentar'
+        ],
+        architectureOverview: 'Agentes en Producción -> Instrumentación LangSmith SDK (Trazas & Spans) -> OpenTelemetry Collector -> Base de Datos de Métricas -> Motor de FinOps (Cálculo de Tokens & Ahorro) -> Dashboard React con Alertas en Tiempo Real.',
+        steps: [
+          {
+            stepNumber: 1,
+            title: 'Instrumentación Distribuida con LangSmith Tracing',
+            duration: '3.0 horas',
+            explanation: 'Configurar el trazado automático de todas las llamadas de los agentes, etiquetando metadatos de usuario, versión del prompt y tenant.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+export LANGCHAIN_API_KEY="ls__..."
+export LANGCHAIN_PROJECT="carrera-ia-produccion"`,
+            deliverableCheck: 'Visualizar al menos 50 trazas con árboles de nodos en el dashboard de LangSmith.'
+          },
+          {
+            stepNumber: 2,
+            title: 'Implementación del Protocolo Human-in-the-Loop (HITL)',
+            duration: '4.5 horas',
+            explanation: 'Añadir puntos de interrupción (`interrupt`) en el grafo antes de mutaciones irreversibles. El sistema genera un enlace de aprobación que reanuda el workflow cuando el operador humano lo autoriza.',
+            commandLanguage: 'python',
+            commandOrSnippet: `# Pausa condicional en LangGraph
+def check_threshold_node(state):
+    if state["estimated_cost"] > 50.0:
+        # Pausa execution y espera human input
+        return interrupt({"reason": "Costo superior a $50 USD. Requiere aprobación manual."})
+    return {"approved": True}`,
+            deliverableCheck: 'Flujo pausado correctamente que espera confirmación antes de proseguir.'
+          },
+          {
+            stepNumber: 3,
+            title: 'Motor FinOps de Contabilidad de Tokens y Caching',
+            duration: '4.5 horas',
+            explanation: 'Crear el servicio de cálculo de costos acumulados: inputs, outputs y tokens en caché (Prompt Caching con descuento 75%). Generar agregaciones diarias y por usuario.',
+            commandLanguage: 'python',
+            commandOrSnippet: `def calculate_token_cost(input_tokens: int, output_tokens: int, cached_tokens: int) -> float:
+    cost_input = (input_tokens / 1_000_000) * 0.10
+    cost_output = (output_tokens / 1_000_000) * 0.40
+    cost_cached = (cached_tokens / 1_000_000) * 0.025
+    return round(cost_input + cost_output + cost_cached, 6)`,
+            deliverableCheck: 'Tabla de base de datos registrando costos y ahorros exactos por sesión.'
+          },
+          {
+            stepNumber: 4,
+            title: 'Desarrollo del Dashboard Ejecutivo de ROI',
+            duration: '5.0 horas',
+            explanation: 'Construir el panel visual con métricas de tiempo ahorrado, costo de IA frente a costo de analista humano y gráfica de retorno de inversión porcentual.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `# Fórmula calculada en backend:
+# ROI = ((Horas Ahorradas * 45 USD/h) - Costo Tokens - Costo Infra) / Costo Desarrollo * 100`,
+            deliverableCheck: 'Gráficas en tiempo real de consumo y ROI accesible vía interfaz web.'
+          },
+          {
+            stepNumber: 5,
+            title: 'Consolidación del Portafolio Maestro y Graduación',
+            duration: '3.0 horas',
+            explanation: 'Integrar los 3 laboratorios en un repositorio mono-repo o portal centralizado con documentación ejecutiva para reclutadores y clientes.',
+            commandLanguage: 'bash',
+            commandOrSnippet: `git status
+# Verificar que los 3 laboratorios cuentan con tests, CI/CD y demos funcionales`,
+            deliverableCheck: 'Portafolio profesional completo listo para inserción laboral en IA.'
+          }
+        ],
+        verificationChecklist: [
+          'Trazado LangSmith activo con 50+ ejecuciones registradas.',
+          'Mecanismo de corte Human-in-the-Loop operativo con reanudación.',
+          'Motor FinOps calculando costos de tokens y caching.',
+          'Dashboard interactivo con cálculo transparente de ROI.',
+          'Documentación completa y presentación final del portafolio.'
+        ],
+        suggestedDeliverableRepo: 'https://github.com/tu-usuario/ai-observability-roi-dashboard'
+      }
     },
   ],
   phases: [
@@ -232,8 +519,8 @@ export const FLAGSHIP_AI_AUTOMATION_ROADMAP: StudyRoadmap = {
     {
       id: 'phase-3',
       phaseNumber: 3,
-      title: 'Fase 3: Python Aplicado y Backend Clean Architecture',
-      description: 'Pipelines ETL, persistencia en PostgreSQL con SQLAlchemy, peticiones asíncronas con HTTPX y APIs en FastAPI siguiendo principios SOLID.',
+      title: 'Fase 3: Python Aplicado y APIs para Automatización',
+      description: 'Pipelines ETL de datos, persistencia en PostgreSQL con SQLAlchemy, peticiones asíncronas con HTTPX y APIs en FastAPI para alimentar agentes de IA y flujos automatizados.',
       weeksRange: 'Semanas 15 - 20',
       estimatedHours: 60,
       modules: [
@@ -274,15 +561,15 @@ export const FLAGSHIP_AI_AUTOMATION_ROADMAP: StudyRoadmap = {
         },
         {
           id: 'mod-3-3',
-          title: 'FastAPI con Clean Architecture & SOLID',
-          description: 'Endpoints RESTful, inyección de dependencias, DTOs vs Entidades de Dominio, middleware de logging y seguridad.',
-          topics: ['Separación de capas: Domain, Application, Infrastructure, Presentation', 'Dependency Injection en FastAPI (Depends)', 'Controladores desacoplados', 'Documentación OpenAPI generada'],
+          title: 'FastAPI y Endpoints Robustos para Automatización',
+          description: 'Endpoints RESTful asíncronos, inyección de dependencias con Depends, modelos Pydantic, manejo de Webhooks y background tasks.',
+          topics: ['Creación de APIs asíncronas con FastAPI', 'Inyección de dependencias (Depends) para clientes HTTP y DB', 'Procesamiento en segundo plano (BackgroundTasks)', 'Documentación OpenAPI autogenerada para n8n y herramientas de agentes'],
           status: 'not_started',
           estimatedHours: 20,
           loggedMinutes: 0,
           deliverable: {
-            title: 'API REST en FastAPI con arquitectura hexagonal/clean modular',
-            description: 'Servicio backend completo con autenticación JWT y tests de integración.',
+            title: 'API REST en FastAPI con endpoints para webhooks e integración con agentes de IA',
+            description: 'Servicio backend completo con autenticación JWT, manejo de errores y tests con pytest.',
             completed: false,
           },
           resources: [
@@ -418,11 +705,11 @@ export const FLAGSHIP_AI_AUTOMATION_ROADMAP: StudyRoadmap = {
   ],
 };
 
-export const CLEAN_ARCH_ROADMAP: StudyRoadmap = {
-  id: 'roadmap-clean-arch-fastapi-12w',
-  title: 'Arquitectura de Software: Clean Architecture & FastAPI',
-  description: 'Ruta especializada para dominar principios SOLID, diseño guiado por el dominio (DDD), inyección de dependencias y backends escalables en Python.',
-  category: 'Arquitectura de Software & Backend',
+export const MULTI_AGENT_AI_ROADMAP: StudyRoadmap = {
+  id: 'roadmap-multi-agent-automation-12w',
+  title: 'Especialización: Sistemas Multi-Agente & Automatización Autónoma',
+  description: 'Ruta avanzada para diseñar redes de agentes inteligentes con LangGraph, CrewAI, Tool Calling y orquestación distribuida para automatizar procesos de negocio.',
+  category: 'Inteligencia Artificial y Automatización',
   totalWeeks: 12,
   weeklyHoursBudget: 8,
   targetPace: 'Balanceado',
@@ -433,143 +720,143 @@ export const CLEAN_ARCH_ROADMAP: StudyRoadmap = {
   updatedAt: new Date().toISOString(),
   portfolioProjects: [
     {
-      id: 'proj-ca-1',
+      id: 'proj-ma-1',
       phaseNumber: 3,
       requiredWeek: 12,
-      title: 'Sistema Multi-Tenant Bancario con Hexagonal Architecture',
-      description: 'API con aislamiento estricto de base de datos por tenant, Keycloak OAuth2, Unit of Work y 95% de cobertura de tests unitarios aislados.',
+      title: 'Sistema Multi-Agente Autónomo con LangGraph, n8n y Supervisión',
+      description: 'Red distribuida de agentes de IA con enrutador semántico, memoria persistente en Redis, ejecución de herramientas n8n y panel de supervisión.',
       status: 'pending',
     },
   ],
   phases: [
     {
-      id: 'ca-phase-1',
+      id: 'ma-phase-1',
       phaseNumber: 1,
-      title: 'Fase 1: Fundamentos SOLID en Profundidad',
-      description: 'Descomposición de responsabilidades (SRP), principio abierto/cerrado (OCP) y contratos con interfaces abstractas (ISP/DIP).',
+      title: 'Fase 1: Fundamentos de Agentes y Herramientas (Tool Calling)',
+      description: 'Modelos de lenguaje como motores de razonamiento, Function Calling y esquemas JSON estrictos.',
       weeksRange: 'Semanas 1 - 4',
       estimatedHours: 32,
       modules: [
         {
-          id: 'ca-mod-1',
-          title: 'SRP y OCP con Python Type Hints y Protocols',
-          description: 'Uso de typing.Protocol y clases abstractas ABC para invertir dependencias y desacoplar lógica.',
-          topics: ['Single Responsibility Principle', 'Open/Closed Principle con Strategy Pattern', 'Protocols vs ABC en Python', 'Refactorización de monolitos'],
+          id: 'ma-mod-1',
+          title: 'Function Calling y Tool Use con Modelos Gemini',
+          description: 'Definición de herramientas estructuradas, validación de parámetros con Pydantic y ejecución segura.',
+          topics: ['Function calling nativo', 'Pydantic schemas para herramientas', 'Manejo de errores en ejecución de tools', 'Políticas de timeout'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Refactorización de servicio de facturación aplicando Strategy Pattern',
-            description: 'Código modular sin sentencias if/elif acopladas.',
+            title: 'Agente autónomo capaz de consultar APIs meteorológicas, bases de datos y cálculo dinámico',
+            description: 'Código Python estructurado con llamadas a tools.',
             completed: false,
           },
           resources: [
-            { name: 'Clean Architecture by Robert C. Martin', type: 'Doc', url: 'https://clean-architecture.com' },
+            { name: 'Documentación Oficial de LangChain Tools', type: 'Doc', url: 'https://python.langchain.com' },
           ],
         },
         {
-          id: 'ca-mod-2',
-          title: 'LSP, ISP y DIP: Puertos y Adaptadores',
-          description: 'Diseño de contratos pequeños y contenedores de inyección de dependencias.',
-          topics: ['Liskov Substitution', 'Interface Segregation', 'Dependency Inversion', 'Ports & Adapters (Hexagonal)'],
+          id: 'ma-mod-2',
+          title: 'Memoria y Contexto en Agentes Autónomos',
+          description: 'Gestión de buffers de memoria, compresión semántica de historial y ventanas de contexto.',
+          topics: ['Memoria episódica vs semántica', 'Compresión de prompts', 'Checkpoints en SQLite y Redis', 'Manejo de estados conversacionales'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Módulo de notificación con adaptadores para Email, SMS y Slack intercambiables',
-            description: 'Tests automatizados demostrando sustitución transparente.',
+            title: 'Sistema de memoria persistente para agente con capacidad de recordar preferencias',
+            description: 'Implementación con persistencia en SQLite.',
             completed: false,
           },
           resources: [
-            { name: 'Architecture Patterns with Python (Cosmic Python)', type: 'Doc', url: 'https://www.cosmicpython.com' },
+            { name: 'Guía de Memoria en Agentes de IA', type: 'Doc', url: 'https://langchain-ai.github.io' },
           ],
         },
       ],
     },
     {
-      id: 'ca-phase-2',
+      id: 'ma-phase-2',
       phaseNumber: 2,
-      title: 'Fase 2: Dominio y Casos de Uso Aislados',
-      description: 'Modelado del núcleo de negocio sin dependencias externas ni SQL.',
+      title: 'Fase 2: Grafos de Estado y Flujos Cíclicos con LangGraph',
+      description: 'Orquestación de agentes como máquinas de estado finitas con nodos, aristas condicionales y ciclos de corrección.',
       weeksRange: 'Semanas 5 - 8',
       estimatedHours: 32,
       modules: [
         {
-          id: 'ca-mod-3',
-          title: 'Entidades y Value Objects Puros',
-          description: 'Reglas de validación invariantes dentro del dominio sin librerías externas.',
-          topics: ['Entidades vs Value Objects', 'Invariantes de negocio', 'Excepciones de dominio personalizadas', 'Pruebas unitarias ultrarrápidas en memoria'],
+          id: 'ma-mod-3',
+          title: 'Arquitectura de Nodos y Reducción de Estado en LangGraph',
+          description: 'Definición de TypedDict para el estado del grafo, nodos ejecutores y evaluación de condiciones.',
+          topics: ['StateGraph y CompiledGraph', 'Annotated con add_messages', 'Aristas condicionales (Router edges)', 'Manejo de interrupciones'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Dominio de cuentas bancarias y transferencias con lógica monetaria precisa',
-            description: '100% de cobertura sin tocar base de datos.',
+            title: 'Grafo de control con ciclo de auto-corrección de código con LLM',
+            description: 'Flujo que genera, prueba y corrige código automáticamente.',
             completed: false,
           },
           resources: [
-            { name: 'Domain-Driven Design Distilled', type: 'Doc', url: 'https://martinfowler.com' },
+            { name: 'LangGraph Official Docs & Tutorials', type: 'Doc', url: 'https://langchain-ai.github.io/langgraph/' },
           ],
         },
         {
-          id: 'ca-mod-4',
-          title: 'Casos de Uso (Interactors) y DTOs',
-          description: 'Orquestación de flujos de negocio mediante Use Cases atómicos.',
-          topics: ['Casos de uso como unidades de ejecución', 'DTOs de entrada y salida', 'Unit of Work Pattern', 'Manejo de transacciones atómicas'],
+          id: 'ma-mod-4',
+          title: 'Patrón Supervisor y Redes Multi-Agente',
+          description: 'Coordinación entre un agente líder que delega tareas a agentes especializados (Investigador, Redactor, Crítico).',
+          topics: ['Patrón Supervisor vs Red Peer-to-Peer', 'Handoffs entre agentes', 'Estructuración de respuestas intermedias', 'Límites de iteraciones'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Caso de uso para procesamiento de transacciones interbancarias',
-            description: 'Control de rollback y auditoría desacoplada.',
+            title: 'Red multi-agente para investigación de mercado y síntesis ejecutiva',
+            description: 'Ejecución coordinada con 3 agentes especializados.',
             completed: false,
           },
           resources: [
-            { name: 'Enterprise Integration Patterns', type: 'Doc', url: 'https://enterpriseintegrationpatterns.com' },
+            { name: 'Multi-Agent Architectures Overview', type: 'Doc', url: 'https://blog.langchain.dev' },
           ],
         },
       ],
     },
     {
-      id: 'ca-phase-3',
+      id: 'ma-phase-3',
       phaseNumber: 3,
-      title: 'Fase 3: Infraestructura, FastAPI y Multi-Tenancy',
-      description: 'Conexión con PostgreSQL, Keycloak y empaquetado en contenedores.',
+      title: 'Fase 3: Integración de Agentes con n8n, Webhooks y Producción',
+      description: 'Conexión de agentes con flujos de trabajo empresariales y supervisión humana (Human-in-the-loop).',
       weeksRange: 'Semanas 9 - 12',
       estimatedHours: 32,
       modules: [
         {
-          id: 'ca-mod-5',
-          title: 'Adaptadores de Persistencia con SQLAlchemy 2.0 Async',
-          description: 'Mapeo imperativo o declarativo manteniendo el dominio limpio.',
-          topics: ['Mapeo clásico vs declarativo', 'Repositorios asíncronos en PostgreSQL', 'Row Level Security (RLS) multi-tenant', 'Alembic sin acoplar modelos'],
+          id: 'ma-mod-5',
+          title: 'Webhooks Bidireccionales y Conexión LangGraph con n8n',
+          description: 'Disparo de agentes desde eventos de n8n y ejecución de sub-flujos de automatización desde los agentes.',
+          topics: ['Webhooks asíncronos', 'FastAPI bridge para LangGraph', 'Nodos AI Agent de n8n', 'Formato de respuestas estructuradas'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Repositorio PostgreSQL con aislamiento de inquilinos probado con pytest',
-            description: 'Tests con base de datos en Docker.',
+            title: 'Integración completa: Webhook de entrada -> Agente IA -> Flujo automatizado de n8n',
+            description: 'Pipeline end-to-end testeable.',
             completed: false,
           },
           resources: [
-            { name: 'PostgreSQL Multi-Tenancy Patterns', type: 'Doc', url: 'https://aws.amazon.com' },
+            { name: 'n8n AI Agent Integration Guide', type: 'Doc', url: 'https://docs.n8n.io' },
           ],
         },
         {
-          id: 'ca-mod-6',
-          title: 'FastAPI Presentation Layer & Keycloak JWT',
-          description: 'Rutas limpias, inyección de casos de uso mediante Depends y validación de seguridad.',
-          topics: ['Routers como delgados adaptadores HTTP', 'Validación OAuth2 / Keycloak en middleware', 'Manejo global de excepciones de dominio mapeadas a HTTP codes', 'Documentación Swagger lista para clientes'],
+          id: 'ma-mod-6',
+          title: 'Human-in-the-Loop y Despliegue de Agentes',
+          description: 'Pausa para aprobación humana en acciones críticas, observabilidad con LangSmith y métricas.',
+          topics: ['Interrupciones humanas en LangGraph', 'Aprobaciones por email o Slack', 'Trazabilidad con LangSmith', 'Contención de costos de tokens'],
           status: 'not_started',
           estimatedHours: 16,
           loggedMinutes: 0,
           deliverable: {
-            title: 'Proyecto Final: API completa con Clean Architecture documentada y lista para despliegue',
-            description: 'Repositorio de GitHub con CI/CD de tests.',
+            title: 'Proyecto Final: Sistema Multi-Agente con Aprobación Humana y Telemetría',
+            description: 'Despliegue operativo listo para producción.',
             completed: false,
           },
           resources: [
-            { name: 'FastAPI in Production Best Practices', type: 'Doc', url: 'https://fastapi.tiangolo.com' },
+            { name: 'LangSmith Observability Documentation', type: 'Doc', url: 'https://docs.smith.langchain.com' },
           ],
         },
       ],

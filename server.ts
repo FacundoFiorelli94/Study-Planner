@@ -35,7 +35,7 @@ function getEffectiveModel(requestedModel?: string): string {
   return "gemini-3.5-flash";
 }
 
-// 1. Multi-turn Chat API with Gemini & High Thinking mode
+// 1. Multi-turn Chat API with Gemini, High Thinking mode and Google Search Grounding
 app.post("/api/chat", async (req, res) => {
   try {
     const {
@@ -43,13 +43,15 @@ app.post("/api/chat", async (req, res) => {
       model = "gemini-3.5-flash",
       systemInstruction = "Eres un mentor de estudio técnico y arquitecto de software de alto nivel.",
       enableHighThinking = false,
+      useGoogleSearch = false,
     } = req.body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Se requiere un array de mensajes no vacío." });
     }
 
-    const selectedModel = getEffectiveModel(model);
+    // If Google Search is requested, use gemini-3.5-flash
+    const selectedModel = useGoogleSearch ? "gemini-3.5-flash" : getEffectiveModel(model);
 
     // Format contents for Gemini SDK
     const contents = messages.map((m: { role: string; text: string }) => ({
@@ -61,8 +63,9 @@ app.post("/api/chat", async (req, res) => {
       systemInstruction,
     };
 
-    // If High Thinking is requested or model is gemini-3.1-pro-preview
-    if (enableHighThinking || selectedModel === "gemini-3.1-pro-preview") {
+    if (useGoogleSearch) {
+      config.tools = [{ googleSearch: {} }];
+    } else if (enableHighThinking || selectedModel === "gemini-3.1-pro-preview") {
       config.thinkingConfig = {
         thinkingLevel: ThinkingLevel.HIGH,
       };
@@ -77,10 +80,19 @@ app.post("/api/chat", async (req, res) => {
       });
 
       const responseText = response.text || "No se pudo generar respuesta.";
+
+      // Extract search grounding metadata if available
+      const groundingChunks = (response.candidates?.[0] as any)?.groundingMetadata?.groundingChunks;
+      const searchSources = groundingChunks
+        ?.map((c: any) => (c.web?.uri ? { title: c.web.title || c.web.uri, url: c.web.uri } : null))
+        .filter(Boolean) || [];
+
       return res.json({
         response: responseText,
         modelUsed: selectedModel,
-        highThinkingEnabled: Boolean(enableHighThinking || selectedModel === "gemini-3.1-pro-preview"),
+        highThinkingEnabled: Boolean(!useGoogleSearch && (enableHighThinking || selectedModel === "gemini-3.1-pro-preview")),
+        groundedWithSearch: Boolean(useGoogleSearch),
+        sources: searchSources,
       });
     } catch (modelError: any) {
       console.warn(`Error with ${selectedModel}, falling back to gemini-3.5-flash:`, modelError?.message);
@@ -106,6 +118,40 @@ app.post("/api/chat", async (req, res) => {
   } catch (error: any) {
     console.error("Chat error:", error);
     res.status(500).json({ error: error.message || "Error procesando mensaje con Gemini." });
+  }
+});
+
+// Audio Transcription API using gemini-3.5-transcribe
+app.post("/api/transcribe", async (req, res) => {
+  try {
+    const { audioBase64, mimeType = "audio/webm" } = req.body;
+
+    if (!audioBase64) {
+      return res.status(400).json({ error: "Se requiere audioBase64." });
+    }
+
+    const audioPart = {
+      inlineData: {
+        mimeType: mimeType.split(";")[0], // Clean mime type (e.g., audio/webm)
+        data: audioBase64,
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-transcribe",
+      contents: {
+        parts: [
+          audioPart,
+          { text: "Transcribe fielmente el contenido hablado en este audio. Devuelve exclusivamente el texto transcrito sin comentarios ni prefacios." },
+        ],
+      },
+    });
+
+    const transcription = response.text?.trim() || "";
+    return res.json({ text: transcription });
+  } catch (error: any) {
+    console.error("Transcription error:", error);
+    res.status(500).json({ error: error.message || "Error al transcribir el audio con gemini-3.5-transcribe." });
   }
 });
 

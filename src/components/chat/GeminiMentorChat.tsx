@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, MentorPersona, StudyRoadmap } from '../../types/study';
 import { ApiService } from '../../services/apiService';
 import { StorageService } from '../../services/storageService';
+import { AudioTranscriberButton } from '../audio/AudioTranscriberButton';
 import {
   Send,
   Sparkles,
@@ -9,15 +10,20 @@ import {
   User,
   Trash2,
   Brain,
-  Zap,
-  Code2,
-  Calendar,
+  Globe,
   Layers,
   Copy,
   Check,
-  AlertCircle,
   Clock,
+  ExternalLink,
+  Cpu,
+  SlidersHorizontal,
 } from 'lucide-react';
+
+interface ExtendedChatMessage extends ChatMessage {
+  groundedWithSearch?: boolean;
+  sources?: { title: string; url: string }[];
+}
 
 interface GeminiMentorChatProps {
   roadmap: StudyRoadmap;
@@ -34,41 +40,41 @@ const PERSONA_CONFIGS: Record<
   }
 > = {
   roadmap_master: {
-    title: 'Gestor del Plan de Estudios (IA & Automatización)',
-    description: 'Especialista en el Plan Maestro de 30 semanas, fases 0 a 5, entregables de portafolio y recursos oficiales.',
+    title: 'Gestor de Carrera (IA & Automatización)',
+    description: 'Especialista en la Carrera de IA y Automatización, fases 0 a 5, entregables de portafolio y recursos oficiales.',
     systemInstruction: `Actúas como el Gestor del Plan de Estudios y Mentor Técnico de Aprendizaje. Tu comunicación es sumamente profesional pero en lenguaje natural, empática y clara.
-Conoces en profundidad el Plan Maestro de 30 Semanas de Automatización con IA:
+Conoces en profundidad la Carrera de IA y Automatización (30 semanas):
 - Fase 0 (Semanas 1-3): Fundamentos Analíticos (JSON Schema, HTTP/REST, OAuth2).
 - Fase 1 (Semanas 4-8): IA Aplicada y Prompting (Chain-of-thought, Structured Outputs).
-- Fase 2 (Semanas 9-14): Automatización Visual (n8n/Make, webhooks, try/catch, certificación n8n Academy, Proyecto 1).
-- Fase 3 (Semanas 15-20): Python Aplicado (ETL, PostgreSQL, SQLAlchemy async, FastAPI con Clean Architecture).
-- Fase 4 (Semanas 21-26): RAG y LangGraph (ReAct, grafos de estado, pgvector, Proyecto 2).
-- Fase 5 (Semanas 27-30): Observabilidad y MLOps (LangSmith, costos de tokens, Human-in-the-loop, Proyecto 3).
-Tu objetivo es resolver bloqueos, validar entregables y adaptar los temas al tiempo disponible del usuario.`,
+- Fase 2 (Semanas 9-14): Automatización Visual (n8n/Make, webhooks, try/catch, certificación n8n Academy, Laboratorio 1).
+- Fase 3 (Semanas 15-20): Python Aplicado (ETL, PostgreSQL, SQLAlchemy async, FastAPI para automatización e IA).
+- Fase 4 (Semanas 21-26): RAG y LangGraph (ReAct, grafos de estado, pgvector, Laboratorio 2).
+- Fase 5 (Semanas 27-30): Observabilidad y MLOps (LangSmith, costos de tokens, Human-in-the-loop, Laboratorio 3).
+Tu objetivo es resolver bloqueos, validar entregables y adaptar los temas al tiempo disponible del usuario. Enfoque exclusivo en Inteligencia Artificial y Automatización.`,
     defaultModel: 'gemini-3.5-flash',
     recommendedThinking: false,
   },
-  architect: {
-    title: 'Arquitecto de Software (SOLID & Clean Architecture)',
-    description: 'Guardián de la calidad de software, independencia de frameworks, inversión de dependencias y patrones limpios.',
-    systemInstruction: `Actúas como un Arquitecto de Software Senior y mentor técnico. Aplicas rigurosamente los principios SOLID (SRP, OCP, LSP, ISP, DIP) y Clean Architecture / Hexagonal.
-- Independencia del Framework: el núcleo del dominio y casos de uso nunca se acoplan a FastAPI, bases de datos o librerías externas.
-- Inversión de Dependencias (DIP) y Puertos/Adaptadores: uso de interfaces/protocols para repositorios y servicios externos.
-- Explicas conceptos complejos con metáforas claras del mundo real y nunca devuelves monolitos. Muestras cómo estructurar routers, interactors/use cases y repositorios.`,
+  automation_engineer: {
+    title: 'Especialista en Automatización (n8n & APIs)',
+    description: 'Experto en diseño de flujos en n8n, webhooks asíncronos, integración de herramientas y automatización empresarial.',
+    systemInstruction: `Actúas como Ingeniero Senior de Automatización de Procesos.
+Dominas n8n en Docker, Make, webhooks, manejo de errores robusto con try/catch, subflujos, llamadas HTTP con autenticación Bearer/OAuth2 y transformaciones de datos JSON.
+Explicas soluciones paso a paso, con configuraciones de nodos reales y buenas prácticas para entornos de producción.`,
+    defaultModel: 'gemini-3.5-flash',
+    recommendedThinking: false,
+  },
+  ai_engineer: {
+    title: 'Ingeniero de IA & Agentes Autónomos',
+    description: 'Experto en LLMs, LangGraph, RAG vectorial con pgvector, tool calling y arquitecturas multi-agente.',
+    systemInstruction: `Actúas como Ingeniero Senior de Inteligencia Artificial y Agentes Autónomos.
+Dominas modelos de última generación (Gemini, Claude, GPT), orquestación de grafos cíclicos con LangGraph, bases de datos vectoriales (pgvector), embeddings semánticos, chunking, técnicas avanzadas de prompt engineering y ejecución de herramientas (Tool Calling).
+Guias al estudiante con código limpio en Python y explicaciones claras y aplicadas.`,
     defaultModel: 'gemini-3.1-pro-preview',
     recommendedThinking: true,
   },
-  frontend_ux: {
-    title: 'Diseñador UX/UI & Desarrollador Frontend',
-    description: 'Experto en arquitectura visual intuitiva, feedback claro al usuario, ergonomía y componentes modernos.',
-    systemInstruction: `Actúas como Arquitecto Frontend y Diseñador de Producto UX/UI. Tu misión es transformar requerimientos en experiencias visuales fluidas, sin fricción y accesibles.
-Privilegias la claridad visual, jerarquía tipográfica, estados vacíos/de carga, transiciones sutiles y feedback amigable para el estudiante.`,
-    defaultModel: 'gemini-3.5-flash',
-    recommendedThinking: false,
-  },
   productivity_coach: {
-    title: 'Tutor de Planificación y Gestión de Tiempo',
-    description: 'Especialista en distribución de hábitos, técnica Pomodoro y adaptación de metas según horas semanales.',
+    title: 'Tutor de Planificación y Horarios',
+    description: 'Especialista en distribución de hábitos, técnica Pomodoro y adaptación de metas según horas disponibles.',
     systemInstruction: `Actúas como Tutor de Productividad Académica y Gestión del Tiempo.
 Ayudas al estudiante a desglosar metas grandes en micro-sesiones de 45-90 minutos, evitar el agotamiento (burnout) y organizar su calendario según sus horas reales disponibles.`,
     defaultModel: 'gemini-3.1-flash-lite',
@@ -77,7 +83,7 @@ Ayudas al estudiante a desglosar metas grandes en micro-sesiones de 45-90 minuto
 };
 
 export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+  const [messages, setMessages] = useState<ExtendedChatMessage[]>(() =>
     StorageService.getChatMessages()
   );
   const [inputValue, setInputValue] = useState('');
@@ -87,6 +93,8 @@ export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) =
     'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3.1-flash-lite'
   >('gemini-3.5-flash');
   const [enableHighThinking, setEnableHighThinking] = useState(false);
+  const [useGoogleSearch, setUseGoogleSearch] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const threadEndRef = useRef<HTMLDivElement>(null);
@@ -113,7 +121,7 @@ export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) =
     const textToSend = customPrompt || inputValue.trim();
     if (!textToSend || isLoading) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: ExtendedChatMessage = {
       id: `msg-user-${Date.now()}`,
       role: 'user',
       text: textToSend,
@@ -140,43 +148,52 @@ export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) =
         model: selectedModel,
         systemInstruction: contextSystemInstruction,
         enableHighThinking: enableHighThinking || selectedModel === 'gemini-3.1-pro-preview',
+        useGoogleSearch,
       });
 
-      const modelMessage: ChatMessage = {
+      const modelMessage: ExtendedChatMessage = {
         id: `msg-model-${Date.now()}`,
         role: 'model',
         text: res.response,
         timestamp: new Date().toISOString(),
         modelUsed: res.modelUsed,
         rolePersona: selectedPersona,
-        highThinking: res.highThinkingEnabled,
+        highThinking: enableHighThinking || selectedModel === 'gemini-3.1-pro-preview',
+        groundedWithSearch: res.groundedWithSearch,
+        sources: res.sources,
       };
 
-      setMessages((prev) => [...prev, modelMessage]);
-    } catch (err: any) {
-      const errorMessage: ChatMessage = {
+      setMessages([...newMessages, modelMessage]);
+    } catch (error) {
+      console.error('Error generating mentor response:', error);
+      const errorMessage: ExtendedChatMessage = {
         id: `msg-err-${Date.now()}`,
         role: 'model',
-        text: `Lo siento, ocurrió un error al consultar con el modelo (${err.message || 'Error de conexión'}). Por favor, intenta de nuevo o cambia de modelo.`,
+        text: 'Ocurrió un error al consultar con el mentor IA. Por favor verifica tu conexión y vuelve a intentar en unos segundos.',
         timestamp: new Date().toISOString(),
-        modelUsed: selectedModel,
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages([...newMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleAudioTranscribed = (transcript: string) => {
+    if (transcript.trim()) {
+      setInputValue((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    }
+  };
+
   const handleClearChat = () => {
-    if (window.confirm('¿Deseas reiniciar la conversación con tu mentor?')) {
-      const resetMessages: ChatMessage[] = [
+    if (window.confirm('¿Reiniciar la conversación del mentor? Se limpiará el historial del chat.')) {
+      const resetMessages: ExtendedChatMessage[] = [
         {
           id: `msg-welcome-${Date.now()}`,
           role: 'model',
-          text: `Hola, he reiniciado nuestra sesión. Estoy listo como **${PERSONA_CONFIGS[selectedPersona].title}** para resolver cualquier duda o planificar tus metas. ¿Por dónde empezamos?`,
+          text: `¡Hola! Soy tu ${PERSONA_CONFIGS[selectedPersona].title}. Estoy listo para acompañarte en tu formación en Inteligencia Artificial y Automatización. ¿En qué módulo o desafío técnico deseas avanzar hoy?`,
           timestamp: new Date().toISOString(),
-          modelUsed: selectedModel,
           rolePersona: selectedPersona,
+          modelUsed: selectedModel,
         },
       ];
       setMessages(resetMessages);
@@ -191,75 +208,99 @@ export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) =
   };
 
   const quickPrompts = [
-    '¿Cómo organizar la Fase 0 en mis horas disponibles semanales?',
-    'Explícame cómo aplicar el principio SRP y OCP en un pipeline de datos',
-    'Dame una arquitectura limpia para LangGraph con checkpoints y pgvector',
-    'Plantéame un desafío técnico para validar contratos JSON Schema',
+    '¿Cómo organizar la Fase 0 en mis horas semanales?',
+    '¿Cómo conectar un webhook con n8n y un agente IA?',
+    '¿Cómo estructurar un flujo con LangGraph y pgvector?',
+    'Plantéame un desafío técnico para validar esquemas JSON',
   ];
 
   return (
-    <div className="space-y-6 pb-16">
-      {/* Mentor Header Card */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-900 shrink-0 border border-slate-800 shadow-md">
-              <img
-                src="/src/assets/images/mentor_avatar_bot_1791511805346.jpg"
-                alt="Mentor Avatar"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mb-1">
-                <span>Mentoría Técnica Gemini Multi-Turn</span>
-                <span aria-hidden="true">·</span>
-                <span>Contexto Activo: {roadmap.title}</span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                {PERSONA_CONFIGS[selectedPersona].title}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5 max-w-xl">
-                {PERSONA_CONFIGS[selectedPersona].description}
-              </p>
-            </div>
+    <div className="h-full w-full flex flex-col min-h-0 bg-[#161822] border border-[#262a36] rounded-2xl shadow-lg overflow-hidden">
+      {/* 1. Integrated Sleek Top Header Bar (~46px) */}
+      <div className="bg-[#13151e] border-b border-[#252834] px-3.5 py-2 flex items-center justify-between gap-3 shrink-0">
+        {/* Left: Persona info */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-[#10121a] shrink-0 border border-[#2b303e]">
+            <img
+              src="/src/assets/images/mentor_avatar_bot_1791511805346.jpg"
+              alt="Mentor Avatar"
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
 
-          {/* Persona selector tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-100 truncate">
+                {PERSONA_CONFIGS[selectedPersona].title}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="En línea" />
+            </div>
+            <p className="text-[10px] text-slate-400 truncate hidden sm:block">
+              {PERSONA_CONFIGS[selectedPersona].description}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Persona selector pills & Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 p-0.5 bg-[#10121a] rounded-lg border border-[#232734]">
             {(
               [
                 ['roadmap_master', 'Plan IA', Layers],
-                ['architect', 'Arquitecto SOLID', Code2],
-                ['frontend_ux', 'Diseño UX', Sparkles],
-                ['productivity_coach', 'Tutor Tiempo', Clock],
+                ['automation_engineer', 'Automatización', Cpu],
+                ['ai_engineer', 'Agentes IA', Sparkles],
+                ['productivity_coach', 'Horarios', Clock],
               ] as const
             ).map(([key, label, Icon]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => handlePersonaChange(key)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors flex items-center gap-1 whitespace-nowrap ${
                   selectedPersona === key
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-[#1a1d28]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{label}</span>
+                <Icon className="w-3 h-3" />
+                <span className="hidden md:inline">{label}</span>
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Model and Thinking Controls Row */}
-        <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Model Selector */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-semibold text-slate-700">Modelo Gemini:</span>
+          {/* Model / Grounding configuration toggle */}
+          <button
+            type="button"
+            onClick={() => setShowConfigPanel(!showConfigPanel)}
+            className={`p-1.5 rounded-lg border transition-colors text-xs flex items-center gap-1 ${
+              showConfigPanel
+                ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40'
+                : 'bg-[#10121a] text-slate-400 hover:text-slate-200 border-[#232734]'
+            }`}
+            title="Ajustes de modelo y búsqueda"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Reset chat button */}
+          <button
+            type="button"
+            onClick={handleClearChat}
+            title="Reiniciar chat"
+            className="p-1.5 text-slate-400 hover:text-rose-400 bg-[#10121a] hover:bg-[#1f1a24] border border-[#232734] rounded-lg transition-colors text-xs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Optional dropdown panel for Model & Tools (takes ~36px when open) */}
+      {showConfigPanel && (
+        <div className="bg-[#10121b] border-b border-[#252834] px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0 animate-in fade-in duration-150">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className="text-slate-400">Modelo:</span>
               <select
                 value={selectedModel}
                 onChange={(e) => {
@@ -269,191 +310,223 @@ export const GeminiMentorChat: React.FC<GeminiMentorChatProps> = ({ roadmap }) =
                     setEnableHighThinking(true);
                   }
                 }}
-                className="bg-slate-50 border border-slate-200 text-slate-800 font-medium px-2.5 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+                className="bg-[#151722] border border-[#292e3e] text-slate-200 text-[11px] px-2 py-0.5 rounded-md focus:outline-none"
               >
-                <option value="gemini-3.5-flash">gemini-3.5-flash (General & Rápido)</option>
-                <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Complejo / High Thinking)</option>
-                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Ultra Baja Latencia)</option>
+                <option value="gemini-3.5-flash">gemini-3.5-flash (Rápido)</option>
+                <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Thinking: High)</option>
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Ultra Rápido)</option>
               </select>
             </div>
 
-            {/* High Thinking Toggle */}
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 bg-amber-50/60 px-3 py-1.5 rounded-lg border border-amber-200/60 hover:bg-amber-100/60 transition-colors">
+            <label className="flex items-center gap-1 cursor-pointer text-[10px] font-semibold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded border border-indigo-500/30">
               <input
                 type="checkbox"
                 checked={enableHighThinking || selectedModel === 'gemini-3.1-pro-preview'}
                 onChange={(e) => setEnableHighThinking(e.target.checked)}
-                className="rounded text-amber-600 focus:ring-amber-500"
+                className="rounded text-indigo-500 focus:ring-0 w-2.5 h-2.5"
               />
-              <span className="flex items-center gap-1 text-amber-900">
-                <Brain className="w-3.5 h-3.5 text-amber-600" />
-                <span>Modo High Thinking</span>
-              </span>
+              <Brain className="w-2.5 h-2.5 text-indigo-400" />
+              <span>Thinking</span>
+            </label>
+
+            <label className="flex items-center gap-1 cursor-pointer text-[10px] font-semibold text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded border border-sky-500/30">
+              <input
+                type="checkbox"
+                checked={useGoogleSearch}
+                onChange={(e) => setUseGoogleSearch(e.target.checked)}
+                className="rounded text-sky-500 focus:ring-0 w-2.5 h-2.5"
+              />
+              <Globe className="w-2.5 h-2.5 text-sky-400" />
+              <span>Search</span>
             </label>
           </div>
 
-          <button
-            type="button"
-            onClick={handleClearChat}
-            className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-rose-600 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Reiniciar Chat</span>
-          </button>
+          <span className="text-[10px] text-slate-400 truncate">
+            {roadmap.title}
+          </span>
         </div>
-      </section>
+      )}
 
-      {/* Main Chat Thread Container */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[560px]">
-        {/* Scrollable Message List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {messages.map((msg) => {
-            const isUser = msg.role === 'user';
+      {/* 2. Scrollable Message Thread (Fills 100% of remaining space with internal scroll only) */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-2.5 space-y-2 bg-[#13151c]">
+        {messages.map((msg) => {
+          const isUser = msg.role === 'user';
 
-            return (
+          return (
+            <div
+              key={msg.id}
+              className={`flex gap-2 max-w-xl sm:max-w-2xl ${
+                isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
+              }`}
+            >
+              {/* Avatar Icon */}
               <div
-                key={msg.id}
-                className={`flex gap-3.5 max-w-3xl ${
-                  isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                className={`w-5 h-5 rounded-md shrink-0 flex items-center justify-center font-bold text-[10px] mt-0.5 ${
+                  isUser
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-[#222634] text-slate-200 border border-[#2b3040]'
                 }`}
               >
-                {/* Avatar Icon */}
-                <div
-                  className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center ${
-                    isUser
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-amber-500 text-slate-950 font-bold'
-                  }`}
-                >
-                  {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                </div>
+                {isUser ? <User className="w-2.5 h-2.5" /> : <Bot className="w-2.5 h-2.5 text-indigo-400" />}
+              </div>
 
-                {/* Message Body Bubble */}
-                <div
-                  className={`space-y-1.5 rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
-                    isUser
-                      ? 'bg-slate-900 text-white rounded-tr-xs'
-                      : 'bg-slate-50 border border-slate-200/80 text-slate-800 rounded-tl-xs shadow-2xs'
-                  }`}
-                >
-                  {/* Model Header Badges (for model output) */}
-                  {!isUser && (
-                    <div className="flex items-center justify-between gap-3 pb-1 border-b border-slate-200/50 mb-1 text-[11px] text-slate-500">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-slate-700">
-                          {msg.modelUsed || selectedModel}
+              {/* Message Body Bubble */}
+              <div
+                className={`space-y-0.5 rounded-xl px-3 py-2 text-xs leading-normal ${
+                  isUser
+                    ? 'bg-indigo-600 text-white rounded-tr-xs shadow-sm'
+                    : 'bg-[#181a24] border border-[#272b38] text-slate-200 rounded-tl-xs shadow-xs'
+                }`}
+              >
+                {/* Model Header Badges */}
+                {!isUser && (
+                  <div className="flex items-center justify-between gap-2 pb-0.5 border-b border-[#252834] mb-1 text-[9px] text-slate-400">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-slate-300">
+                        {msg.modelUsed || selectedModel}
+                      </span>
+                      {msg.highThinking && (
+                        <span className="text-indigo-300 font-semibold flex items-center gap-0.5 bg-indigo-500/15 px-1 py-0.2 rounded border border-indigo-500/30">
+                          <Brain className="w-2.5 h-2.5 text-indigo-400" />
+                          Thinking
                         </span>
-                        {msg.highThinking && (
-                          <span className="text-amber-800 font-semibold flex items-center gap-1 bg-amber-100/70 px-1.5 py-0.2 rounded">
-                            <Brain className="w-3 h-3 text-amber-700" />
-                            Thinking: High
-                          </span>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(msg.id, msg.text)}
-                        title="Copiar texto"
-                        className="text-slate-400 hover:text-slate-700 transition-colors"
-                      >
-                        {copiedId === msg.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
+                      )}
+                      {msg.groundedWithSearch && (
+                        <span className="text-sky-300 font-semibold flex items-center gap-0.5 bg-sky-500/15 px-1 py-0.2 rounded border border-sky-500/30">
+                          <Globe className="w-2.5 h-2.5 text-sky-400" />
+                          Search
+                        </span>
+                      )}
                     </div>
-                  )}
 
-                  {/* Message Content formatted with Markdown-like paragraphs */}
-                  <div className="whitespace-pre-wrap break-words font-normal">
-                    {msg.text}
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(msg.id, msg.text)}
+                      title="Copiar texto"
+                      className="text-slate-400 hover:text-white transition-colors"
+                    >
+                      {copiedId === msg.id ? (
+                        <Check className="w-2.5 h-2.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-2.5 h-2.5" />
+                      )}
+                    </button>
                   </div>
+                )}
 
-                  <span
-                    className={`block text-[10px] text-right pt-1 ${
-                      isUser ? 'text-slate-400' : 'text-slate-400'
-                    }`}
-                  >
-                    {new Date(msg.timestamp).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                {/* Message Content */}
+                <div className="whitespace-pre-wrap break-words font-normal text-[11.5px] leading-relaxed">
+                  {msg.text}
                 </div>
-              </div>
-            );
-          })}
 
-          {/* Loading indicator with thinking feedback */}
-          {isLoading && (
-            <div className="flex gap-3.5 max-w-xl mr-auto">
-              <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 animate-pulse" />
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                  <span className="font-semibold text-slate-800">
-                    {enableHighThinking || selectedModel === 'gemini-3.1-pro-preview'
-                      ? 'Analizando y razonando a fondo (Thinking: High)...'
-                      : 'Generando respuesta con Gemini...'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  Evaluando reglas de Clean Architecture y planificador de 30 semanas.
-                </p>
+                {/* Search Sources Grounding Chips */}
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-1 pt-1 border-t border-slate-800 space-y-0.5">
+                    <span className="text-[9px] uppercase font-bold text-cyan-400 tracking-wider block">
+                      Fuentes verificadas:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {msg.sources.map((src, sIdx) => (
+                        <a
+                          key={sIdx}
+                          href={src.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[9px] border border-slate-700 transition-colors"
+                        >
+                          <span className="truncate max-w-[150px]">{src.title}</span>
+                          <ExternalLink className="w-2 h-2 text-slate-400" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <span
+                  className={`block text-[8.5px] text-right pt-0.5 ${
+                    isUser ? 'text-indigo-200' : 'text-slate-500'
+                  }`}
+                >
+                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
               </div>
             </div>
-          )}
+          );
+        })}
 
-          <div ref={threadEndRef} />
-        </div>
+        {/* Loading indicator with thinking feedback */}
+        {isLoading && (
+          <div className="flex gap-2 max-w-sm mr-auto">
+            <div className="w-5 h-5 rounded-md bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 mt-0.5">
+              <Bot className="w-2.5 h-2.5 animate-pulse" />
+            </div>
+            <div className="bg-[#181a24] border border-[#272b38] rounded-xl px-2.5 py-1.5 text-xs text-slate-300 space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                <span className="font-semibold text-white text-[10.5px]">
+                  {useGoogleSearch
+                    ? 'Consultando fuentes con Google Search...'
+                    : enableHighThinking || selectedModel === 'gemini-3.1-pro-preview'
+                    ? 'Razonando a fondo (Thinking: High)...'
+                    : 'Generando respuesta con Gemini...'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Quick Suggestion Prompts */}
-        <div className="px-6 py-2 border-t border-slate-100 bg-slate-50/60 overflow-x-auto flex items-center gap-2 no-scrollbar">
-          <span className="text-[11px] font-semibold text-slate-400 shrink-0">
-            Sugerencias:
-          </span>
-          {quickPrompts.map((promptText, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleSendMessage(promptText)}
-              className="text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1 rounded-full whitespace-nowrap shrink-0 transition-colors shadow-2xs"
-            >
-              {promptText}
-            </button>
-          ))}
-        </div>
+        <div ref={threadEndRef} />
+      </div>
 
-        {/* Input Bar */}
-        <div className="p-4 border-t border-slate-200 bg-white rounded-b-2xl">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-center gap-2"
+      {/* 3. Quick Suggestion Prompts - Super compact single-line strip (~28px) */}
+      <div className="px-3 py-1 border-t border-[#232635] bg-[#12141d] overflow-x-auto flex items-center gap-1.5 no-scrollbar shrink-0">
+        <span className="text-[9px] font-semibold text-indigo-400 shrink-0">
+          Sugerencias:
+        </span>
+        {quickPrompts.map((promptText, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handleSendMessage(promptText)}
+            className="text-[10px] text-slate-300 hover:text-white bg-[#1a1d27] hover:bg-[#232735] border border-[#2b3040] hover:border-indigo-500/40 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 transition-colors font-medium"
           >
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={`Pregunta a tu ${PERSONA_CONFIGS[selectedPersona].title}...`}
-              disabled={isLoading}
-              className="flex-1 text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-slate-50/50"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="p-3 text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 rounded-xl transition-colors shadow-sm shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
-        </div>
+            {promptText}
+          </button>
+        ))}
+      </div>
+
+      {/* 4. Compact Input Bar (~44px) */}
+      <div className="p-2 border-t border-[#232635] bg-[#141620] shrink-0">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="flex items-center gap-1.5"
+        >
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={`Pregunta a tu ${PERSONA_CONFIGS[selectedPersona].title}...`}
+            disabled={isLoading}
+            className="flex-1 text-xs px-2.5 py-1.5 rounded-xl border border-[#2b303e] focus:outline-none focus:border-indigo-500 bg-[#10121a] text-slate-200 placeholder-slate-500 h-8"
+          />
+
+          {/* Audio transcription button using gemini-3.5-transcribe */}
+          <AudioTranscriberButton onTranscription={handleAudioTranscribed} />
+
+          <button
+            type="submit"
+            disabled={isLoading || !inputValue.trim()}
+            className="p-1.5 text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 rounded-xl transition-colors shrink-0 shadow-sm"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
       </div>
     </div>
   );
