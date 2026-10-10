@@ -1,0 +1,363 @@
+<div class="space-y-6">
+  <!-- Cabecera de la Ruta y Selector -->
+  <div class="tui-island p-5 sm:p-6 bg-[#161822]">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="tui-badge" data-appearance="accent">
+            {{ storage.activeRoadmap().category || 'Ruta Técnica' }}
+          </span>
+          <span class="text-xs text-slate-400">
+            • {{ storage.activeRoadmap().totalWeeks }} Semanas Estimadas
+          </span>
+          <span class="text-xs text-slate-400">
+            • {{ storage.activeRoadmap().weeklyHoursBudget }}h/semana
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          {{ storage.activeRoadmap().title }}
+        </h1>
+        <p class="text-sm text-slate-400 max-w-3xl leading-relaxed">
+          {{ storage.activeRoadmap().description }}
+        </p>
+      </div>
+
+      <!-- Acciones de Cabecera: Selector de Rutas y Ajuste de Ritmo -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <!-- Selector de Roadmap -->
+        @if (storage.roadmaps().length > 1) {
+          <select
+            [value]="storage.activeRoadmapId()"
+            (change)="selectRoadmap($any($event.target).value)"
+            class="bg-[#1b1e2c] border border-[#2a2e3f] text-xs text-slate-200 rounded-lg px-3 py-2 outline-none focus:border-indigo-500"
+          >
+            @for (r of storage.roadmaps(); track r.id) {
+              <option [value]="r.id">{{ r.title }}</option>
+            }
+          </select>
+        }
+
+        <button
+          (click)="showPaceSettings.update((v) => !v)"
+          class="tui-btn tui-btn-secondary px-3 py-2 text-xs"
+        >
+          <svg class="w-3.5 h-3.5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14" />
+            <line x1="4" y1="10" x2="4" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12" y2="3" />
+            <line x1="20" y1="21" x2="20" y2="16" />
+            <line x1="20" y1="12" x2="20" y2="3" />
+            <line x1="1" y1="14" x2="7" y2="14" />
+            <line x1="9" y1="8" x2="15" y2="8" />
+            <line x1="17" y1="16" x2="23" y2="16" />
+          </svg>
+          <span>Ajustar Ritmo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel Desplegable: Ajustar Ritmo Semanal -->
+    @if (showPaceSettings()) {
+      <div class="mt-5 p-4 rounded-xl bg-[#1b1e2c] border border-[#2b2f42] space-y-4 animate-in fade-in">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            Personalizar Disponibilidad Semanal
+          </span>
+          <span class="text-xs font-bold text-indigo-400">
+            {{ selectedPaceHours() }} horas / semana
+          </span>
+        </div>
+
+        <input
+          type="range"
+          min="4"
+          max="30"
+          step="1"
+          [value]="selectedPaceHours()"
+          (input)="selectedPaceHours.set(+$any($event.target).value)"
+          class="w-full accent-indigo-500 cursor-pointer"
+        />
+
+        <div>
+          <span class="text-xs text-slate-400 block mb-2">Días preferidos de estudio:</span>
+          <div class="flex flex-wrap gap-1.5">
+            @for (day of allDays; track day) {
+              <button
+                type="button"
+                (click)="toggleDay(day)"
+                [class]="selectedDays().includes(day) ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-[#151722] text-slate-400 border-[#282c3c] hover:text-slate-200'"
+                class="border px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+              >
+                {{ day }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-[#2a2e3f]">
+          <button
+            type="button"
+            (click)="showPaceSettings.set(false)"
+            class="tui-btn tui-btn-flat px-3 py-1.5 text-xs"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="savePaceSettings()"
+            class="tui-btn tui-btn-primary px-3.5 py-1.5 text-xs"
+          >
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Barra de Progreso Global (Taiga UI) -->
+    <div class="mt-6 pt-5 border-t border-[#232635] space-y-2">
+      <div class="flex items-center justify-between text-xs font-medium">
+        <span class="text-slate-300">
+          Progreso Global: {{ storage.roadmapProgress().completed }} de {{ storage.roadmapProgress().total }} módulos dominados
+        </span>
+        <span class="text-indigo-400 font-bold">
+          {{ storage.roadmapProgress().percent }}%
+        </span>
+      </div>
+      <div class="tui-progress-bar">
+        <div class="tui-progress-bar-fill" [style.width.%]="storage.roadmapProgress().percent"></div>
+      </div>
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+        <span>Horas registradas: {{ storage.roadmapProgress().loggedHours }}h</span>
+        <span>Estimación de la carrera: {{ storage.roadmapProgress().estimatedHours }}h</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desglose por Fases (Acordeón Taiga UI) -->
+  <div class="space-y-4">
+    @for (phase of storage.activeRoadmap().phases; track phase.id) {
+      <div class="tui-island overflow-hidden bg-[#161822] border border-[#252834]">
+        <!-- Encabezado de la Fase -->
+        <button
+          type="button"
+          (click)="togglePhase(phase.id)"
+          class="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-[#1b1e2c]/50 transition-colors"
+        >
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                Fase {{ phase.phaseNumber }}
+              </span>
+              <span class="text-xs text-slate-400">• {{ phase.estimatedWeeks }} Semanas ({{ phase.estimatedHours }}h)</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-100">
+              {{ phase.title }}
+            </h2>
+            <p class="text-xs text-slate-400">
+              Área de enfoque: {{ phase.focusArea }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-4 shrink-0">
+            <!-- Indicador de Progreso de la Fase -->
+            <div class="text-right hidden sm:block">
+              <span class="text-xs font-bold text-slate-200">
+                {{ getPhaseProgress(phase).completed }}/{{ getPhaseProgress(phase).total }}
+              </span>
+              <span class="text-[10px] text-slate-400 block">módulos</span>
+            </div>
+            <svg
+              [class.rotate-180]="isPhaseExpanded(phase.id)"
+              class="w-5 h-5 text-slate-400 transition-transform duration-200"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+        </button>
+
+        <!-- Contenido Expandido de la Fase -->
+        @if (isPhaseExpanded(phase.id)) {
+          <div class="p-4 sm:p-5 pt-0 border-t border-[#212431] space-y-4">
+            <!-- Lista de Módulos -->
+            <div class="space-y-3 pt-4">
+              @for (mod of phase.modules; track mod.id) {
+                <div class="p-4 rounded-xl bg-[#191c28] border border-[#242838] space-y-3 hover:border-[#343a4e] transition-all">
+                  <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="text-sm sm:text-base font-bold text-white">
+                          {{ mod.title }}
+                        </h3>
+                        <span
+                          class="tui-badge"
+                          [attr.data-appearance]="
+                            mod.status === 'completed' ? 'positive' :
+                            mod.status === 'in_progress' ? 'warning' : 'neutral'
+                          "
+                        >
+                          {{
+                            mod.status === 'completed' ? 'Completado' :
+                            mod.status === 'in_progress' ? 'En Progreso' : 'No Iniciado'
+                          }}
+                        </span>
+                        @if (mod.verification?.passed) {
+                          <span class="tui-badge" data-appearance="accent">
+                            IA {{ mod.verification?.score }}/100
+                          </span>
+                        }
+                      </div>
+                      <p class="text-xs text-slate-400 leading-relaxed">
+                        {{ mod.description }}
+                      </p>
+                    </div>
+
+                    <!-- Estado selector rápido y Pomodoro -->
+                    <div class="flex items-center gap-2 shrink-0">
+                      <select
+                        [value]="mod.status"
+                        (change)="updateModuleStatus(mod.id, $any($event.target).value)"
+                        class="bg-[#141620] border border-[#2a2e40] text-xs text-slate-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-500"
+                      >
+                        <option value="not_started">No iniciado</option>
+                        <option value="in_progress">En progreso</option>
+                        <option value="completed">Completado</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        (click)="onStartTimer(phase, mod)"
+                        class="tui-btn tui-btn-secondary px-2.5 py-1.5 text-xs text-indigo-400"
+                        title="Iniciar Pomodoro para este módulo"
+                      >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        <span>Focus</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Temas Clave -->
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (top of mod.topics; track top) {
+                      <span class="text-[11px] bg-[#202434] text-slate-300 px-2 py-0.5 rounded-md border border-[#2b3044]">
+                        {{ top }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Entregable Práctico si existe -->
+                  @if (mod.deliverable) {
+                    <div class="p-3 rounded-lg bg-[#141622] border border-[#222534] flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="mod.deliverable.completed"
+                        (change)="toggleDeliverable(mod)"
+                        class="mt-1 h-4 w-4 rounded accent-emerald-500 cursor-pointer"
+                      />
+                      <div class="flex-1">
+                        <span class="text-xs font-semibold text-slate-200">
+                          Entregable: {{ mod.deliverable.title }}
+                        </span>
+                        <p class="text-[11px] text-slate-400">
+                          {{ mod.deliverable.description }}
+                        </p>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Acciones del Módulo: Guía PDF, Evaluación IA, Recursos -->
+                  <div class="flex items-center justify-between pt-2 border-t border-[#222534] text-xs flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                      @if (hasPdfGuide(mod)) {
+                        <button
+                          type="button"
+                          (click)="onViewPdf(mod)"
+                          class="flex items-center gap-1 text-slate-300 hover:text-indigo-400 transition-colors"
+                        >
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <span>Guía Técnica PDF</span>
+                        </button>
+                      }
+
+                      <button
+                        type="button"
+                        (click)="onEvaluate(phase, mod)"
+                        class="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                      >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <span>Validar Hito con IA</span>
+                      </button>
+                    </div>
+
+                    <div class="text-[11px] text-slate-400">
+                      <span>Estimado: {{ mod.estimatedHours }}h</span>
+                      @if (mod.loggedMinutes) {
+                        <span class="ml-2 font-medium text-slate-300">
+                          (Dedicado: {{ +(mod.loggedMinutes / 60).toFixed(1) }}h)
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Laboratorio Práctico de la Fase si aplica -->
+            @for (proj of storage.activeRoadmap().portfolioProjects; track proj.id) {
+              @if (proj.phaseNumber === phase.phaseNumber) {
+                <div class="mt-4 p-4 rounded-xl bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/30 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                        <polyline points="2 17 12 22 22 17" />
+                        <polyline points="2 12 12 17 22 12" />
+                      </svg>
+                      {{ proj.title }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="onViewLab(proj)"
+                      class="tui-btn tui-btn-primary px-3 py-1 text-xs"
+                    >
+                      Abrir Laboratorio
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-300">
+                    {{ proj.description }}
+                  </p>
+                  @if (proj.labGuide?.steps) {
+                    <div class="space-y-1.5 pt-1">
+                      @for (st of proj.labGuide!.steps; track st.stepNumber; let idx = $index) {
+                        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            [checked]="st.completed"
+                            (change)="toggleLabStep(proj.id, idx)"
+                            class="h-3.5 w-3.5 rounded accent-indigo-500"
+                          />
+                          <span>Paso {{ st.stepNumber }}: {{ st.title }}</span>
+                        </label>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

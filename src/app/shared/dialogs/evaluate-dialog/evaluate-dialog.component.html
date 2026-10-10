@@ -1,0 +1,108 @@
+@if (module(); as m) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in">
+    <div class="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-[#161822] border border-[#2a2e40] shadow-2xl overflow-hidden">
+      
+      <!-- Encabezado del Modal -->
+      <div class="px-5 py-4 border-b border-[#242838] flex items-center justify-between bg-[#141620]">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="tui-badge" data-appearance="accent">Evaluación IA</span>
+            <span class="text-xs text-slate-400">{{ phase()?.title }}</span>
+          </div>
+          <h2 class="text-base font-bold text-white">{{ m.title }}</h2>
+        </div>
+
+        <button
+          type="button"
+          (click)="close.emit()"
+          class="text-slate-400 hover:text-white"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-[#0f1118]">
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Pega tu código, solución explicada o razonamiento conceptual para este módulo. Gemini evaluará el rigor técnico con una rúbrica estructurada de 1 a 100.
+        </p>
+
+        <!-- Cuadro de texto para código o respuesta -->
+        <textarea
+          [(ngModel)]="userCodeOrAnswer"
+          rows="6"
+          placeholder="Pega aquí tu fragmento de código, esquema JSON, o explicación de la solución..."
+          class="w-full bg-[#161824] border border-[#262a3a] rounded-xl p-3 font-mono text-xs text-slate-100 outline-none focus:border-indigo-500 transition-colors"
+        ></textarea>
+
+        <!-- Botones de Acción: Solicitar Desafío o Enviar Código -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            (click)="evaluate(true)"
+            [disabled]="isLoading()"
+            class="tui-btn tui-btn-secondary px-3 py-1.5 text-xs text-amber-300 border-amber-500/30"
+          >
+            ⚡ Solicitar Desafío Práctico
+          </button>
+
+          <button
+            type="button"
+            (click)="evaluate(false)"
+            [disabled]="isLoading() || !userCodeOrAnswer.trim()"
+            class="tui-btn tui-btn-primary px-4 py-1.5 text-xs disabled:opacity-40"
+          >
+            {{ isLoading() ? 'Evaluando...' : 'Evaluar Solución' }}
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="p-3 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Resultado de la Evaluación -->
+        @if (evaluation(); as ev) {
+          <div class="mt-4 p-4 rounded-xl bg-[#161824] border border-[#282d3e] space-y-3 animate-in fade-in">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Resultado del Análisis</span>
+              <span
+                class="tui-badge"
+                [attr.data-appearance]="ev.passed ? 'positive' : 'warning'"
+              >
+                Puntaje: {{ ev.score }}/100 · {{ ev.passed ? 'APROBADO' : 'REQUIERE REPASO' }}
+              </span>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <p class="text-slate-200 font-medium">{{ ev.summaryFeedback }}</p>
+              <div class="p-3 rounded-lg bg-[#12141d] border border-[#202330] text-slate-300">
+                <span class="font-bold text-indigo-400 block mb-1">Crítica Técnica Detallada:</span>
+                <p>{{ ev.detailedCritique }}</p>
+              </div>
+
+              <div class="p-3 rounded-lg bg-[#12141d] border border-[#202330] text-slate-300">
+                <span class="font-bold text-amber-400 block mb-1">Recomendación de Acción:</span>
+                <p>{{ ev.recommendedAction }}</p>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button
+                type="button"
+                (click)="saveVerification()"
+                class="tui-btn tui-btn-primary px-4 py-2 text-xs font-bold"
+              >
+                Guardar y Certificar Hito en la Ruta
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

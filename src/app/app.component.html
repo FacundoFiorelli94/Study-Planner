@@ -1,0 +1,105 @@
+<div
+  [class]="
+    currentTab() === 'chat' && !isDemoMode()
+      ? 'h-screen overflow-hidden'
+      : 'min-h-screen'
+  "
+  class="bg-[#13151b] text-slate-200 flex flex-col font-sans transition-colors duration-300"
+>
+  <!-- Barra de Navegación Superior (Taiga UI) -->
+  <app-navbar
+    [currentTab]="currentTab()"
+    [isDemoMode]="isDemoMode()"
+    (tabChange)="setTab($event)"
+    (openTimer)="openTimerModal()"
+    (openNotifications)="isNotificationsOpen.set(true)"
+    (openNewRoadmap)="isCreateRoadmapOpen.set(true)"
+    (toggleDemoMode)="toggleDemoMode()"
+  />
+
+  <!-- Contenedor Principal de Pantallas -->
+  <main
+    [class]="
+      currentTab() === 'chat' && !isDemoMode()
+        ? 'h-[calc(100vh-4rem)] max-w-6xl p-2 sm:p-3 overflow-hidden flex flex-col flex-1 w-full mx-auto'
+        : 'max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full mx-auto'
+    "
+  >
+    @if (isDemoMode()) {
+      <app-quick-demo
+        (switchToFullApp)="isDemoMode.set(false)"
+        (openTimer)="openTimerModal()"
+        (openNotifications)="isNotificationsOpen.set(true)"
+      />
+    } @else {
+      @switch (currentTab()) {
+        @case ('roadmap') {
+          <app-roadmap-viewer
+            (openEvaluateModal)="openEvaluateModal($event)"
+            (startFocusSession)="openTimerModal($event.module)"
+            (openPdfModal)="openPdfViewer($event)"
+            (openLabModal)="openLabViewer($event)"
+          />
+        }
+        @case ('planner') {
+          <app-smart-planner
+            (startFocus)="openTimerFromSession($event)"
+          />
+        }
+        @case ('progress') {
+          <app-progress-dashboard
+            (openLab)="openLabViewer($event)"
+          />
+        }
+        @case ('chat') {
+          <app-gemini-mentor-chat />
+        }
+      }
+    }
+  </main>
+
+  <!-- Modales y Diálogos Globales (Taiga UI) -->
+  @if (isTimerOpen()) {
+    <app-pomodoro-dialog
+      [initialModule]="timerModule()"
+      (close)="isTimerOpen.set(false)"
+    />
+  }
+
+  @if (isEvaluateOpen()) {
+    <app-evaluate-dialog
+      [module]="evaluateModule()"
+      [phase]="evaluatePhase()"
+      (close)="isEvaluateOpen.set(false)"
+    />
+  }
+
+  @if (isNotificationsOpen()) {
+    <app-notification-drawer
+      (close)="isNotificationsOpen.set(false)"
+    />
+  }
+
+  @if (isCreateRoadmapOpen()) {
+    <app-create-roadmap-dialog
+      (close)="isCreateRoadmapOpen.set(false)"
+      (created)="setTab('roadmap')"
+    />
+  }
+
+  @if (isPdfOpen()) {
+    <app-pdf-viewer-dialog
+      [module]="pdfModule()"
+      (close)="isPdfOpen.set(false)"
+    />
+  }
+
+  @if (isLabOpen()) {
+    <app-lab-viewer-dialog
+      [project]="labProject()"
+      (close)="isLabOpen.set(false)"
+      (toggleStep)="onToggleLabStep($event)"
+      (updateRepo)="onUpdateProjectRepo($event)"
+    />
+  }
+</div>

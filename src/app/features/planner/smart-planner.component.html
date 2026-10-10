@@ -1,0 +1,224 @@
+<div class="space-y-6">
+  <!-- Cabecera del Planificador Inteligente -->
+  <div class="tui-island p-5 sm:p-6 bg-[#161822]">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="tui-badge" data-appearance="accent">
+            Planificador Inteligente
+          </span>
+          <span class="text-xs text-slate-400">
+            • Disponibilidad: {{ storage.activeRoadmap().weeklyHoursBudget }}h/semana
+          </span>
+          <span class="text-xs text-slate-400">
+            • Ritmo {{ storage.activeRoadmap().targetPace }}
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold text-white">
+          Distribución de Sesiones y Calendario de Estudio
+        </h1>
+        <p class="text-xs text-slate-400">
+          Organiza bloques de estudio personalizados para cada hito de tu ruta.
+        </p>
+      </div>
+
+      <!-- Acciones: Optimizar con IA y Agendar Sesión -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button
+          type="button"
+          (click)="rebalanceWithAI()"
+          [disabled]="isRebalancing()"
+          class="tui-btn tui-btn-secondary px-3.5 py-2 text-xs text-amber-300 border-amber-500/30 hover:bg-amber-500/10"
+        >
+          <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          <span>{{ isRebalancing() ? 'Calculando...' : 'Optimizar con IA' }}</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="showAddModal.set(true)"
+          class="tui-btn tui-btn-primary px-3.5 py-2 text-xs"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Agendar Sesión</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Métricas del Planificador (3 Tarjetas Taiga UI) -->
+    <div class="mt-6 pt-5 border-t border-[#232635] grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="p-4 rounded-xl bg-[#1b1e2c] border border-[#272b3b] space-y-1">
+        <span class="text-xs text-slate-400 font-medium">Objetivo Semanal</span>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xl font-bold text-white">{{ storage.activeRoadmap().weeklyHoursBudget }}h</span>
+          <span class="text-xs text-slate-400">({{ storage.activeRoadmap().weeklyHoursBudget * 60 }} min)</span>
+        </div>
+        <span class="text-[11px] text-indigo-400 font-medium">Meta configurada</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-[#1b1e2c] border border-[#272b3b] space-y-1">
+        <span class="text-xs text-slate-400 font-medium">Tiempo Agendado</span>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xl font-bold text-white">{{ +(totalScheduledMinutes / 60).toFixed(1) }}h</span>
+          <span class="text-xs text-slate-400">({{ storage.sessions().length }} sesiones)</span>
+        </div>
+        <span class="text-[11px] text-sky-400 font-medium">En calendario</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-[#1b1e2c] border border-[#272b3b] space-y-1">
+        <span class="text-xs text-slate-400 font-medium">Tiempo Cumplido</span>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xl font-bold text-emerald-400">{{ +(completedScheduledMinutes / 60).toFixed(1) }}h</span>
+          <span class="text-xs text-slate-400">
+            ({{ storage.sessions().filter($any(storage.sessions)).length }} sesiones)
+          </span>
+        </div>
+        <span class="text-[11px] text-emerald-400 font-medium">Dominado con éxito</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Sesiones Programadas -->
+  <div class="space-y-3">
+    <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">
+      Sesiones Planificadas
+    </h2>
+
+    @for (sess of sortedSessions; track sess.id) {
+      <div
+        class="tui-island p-4 bg-[#161822] flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-all"
+        [class.border-emerald-500/30]="sess.completed"
+        [class.border-[#242838]]="!sess.completed"
+      >
+        <div class="flex items-start gap-3">
+          <input
+            type="checkbox"
+            [checked]="sess.completed"
+            (change)="toggleSession(sess.id)"
+            class="mt-1 h-4 w-4 rounded accent-emerald-500 cursor-pointer"
+          />
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-semibold text-slate-400">
+                {{ sess.dayOfWeek }} · {{ sess.date }}
+              </span>
+              <span class="text-xs text-indigo-400 font-medium">
+                {{ sess.durationMinutes }} min
+              </span>
+              @if (sess.completed) {
+                <span class="tui-badge" data-appearance="positive">Completada</span>
+              }
+            </div>
+            <h3 class="text-sm font-bold text-slate-100" [class.line-through]="sess.completed">
+              {{ sess.moduleTitle }}
+            </h3>
+            <p class="text-xs text-slate-400">
+              {{ sess.notes || sess.phaseTitle }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <button
+            type="button"
+            (click)="onStartTimer(sess)"
+            class="tui-btn tui-btn-secondary px-3 py-1.5 text-xs text-indigo-400"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Iniciar Pomodoro</span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Modal para Crear Nueva Sesión -->
+  @if (showAddModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+      <div class="w-full max-w-md rounded-2xl bg-[#161822] border border-[#2a2e40] shadow-2xl p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#242838] pb-3">
+          <h3 class="text-base font-bold text-white">Agendar Nueva Sesión</h3>
+          <button
+            type="button"
+            (click)="showAddModal.set(false)"
+            class="text-slate-400 hover:text-white"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Módulo a estudiar:</label>
+            <select
+              [(ngModel)]="selectedModuleId"
+              class="w-full bg-[#1b1e2c] border border-[#2a2e3f] rounded-lg p-2.5 text-slate-200 outline-none"
+            >
+              @for (mod of allModules; track mod.id) {
+                <option [value]="mod.id">{{ mod.title }} ({{ mod.phaseTitle }})</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Fecha:</label>
+            <input
+              type="date"
+              [(ngModel)]="sessionDate"
+              class="w-full bg-[#1b1e2c] border border-[#2a2e3f] rounded-lg p-2.5 text-slate-200 outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Duración (minutos):</label>
+            <input
+              type="number"
+              step="15"
+              min="15"
+              max="240"
+              [(ngModel)]="durationMinutes"
+              class="w-full bg-[#1b1e2c] border border-[#2a2e3f] rounded-lg p-2.5 text-slate-200 outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Notas u objetivo puntual:</label>
+            <input
+              type="text"
+              placeholder="Ej. Dominar los ejercicios prácticos"
+              [(ngModel)]="sessionNotes"
+              class="w-full bg-[#1b1e2c] border border-[#2a2e3f] rounded-lg p-2.5 text-slate-200 outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-[#242838]">
+          <button
+            type="button"
+            (click)="showAddModal.set(false)"
+            class="tui-btn tui-btn-flat px-3.5 py-1.5 text-xs"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="saveNewSession()"
+            class="tui-btn tui-btn-primary px-4 py-1.5 text-xs"
+          >
+            Guardar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

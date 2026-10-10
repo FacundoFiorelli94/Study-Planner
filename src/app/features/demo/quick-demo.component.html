@@ -1,0 +1,140 @@
+<div class="space-y-6 max-w-4xl mx-auto">
+  <!-- Cabecera del Modo Demo -->
+  <div class="tui-island p-6 bg-[#161822] space-y-3 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center justify-center sm:justify-start gap-2">
+        <span class="tui-badge" data-appearance="warning">⚡ Modo Demo Guiado</span>
+        <span class="text-xs text-slate-400">Recorrido de funcionalidades clave</span>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-extrabold text-white">
+        Descubre el Flujo Inteligente de Study Planner
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 max-w-xl">
+        Experimenta en 4 pasos cómo se adapta la plataforma a tus horas reales, valida tus entregables con IA y te acompaña en cada sesión.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="switchToFullApp.emit()"
+      class="tui-btn tui-btn-primary px-5 py-2.5 text-xs font-bold shrink-0 shadow-lg"
+    >
+      Entrar a la App Completa →
+    </button>
+  </div>
+
+  <!-- 4 Pasos Interactivos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Paso 1: Personalizar Tiempo -->
+    <div class="tui-island p-5 bg-[#161822] space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Paso 1: Disponibilidad</span>
+        <span class="text-xs font-bold text-white">{{ demoHours }}h / semana</span>
+      </div>
+      <h2 class="text-sm font-bold text-white">Configura tu Ritmo Semanal</h2>
+      <p class="text-xs text-slate-400">El algoritmo distribuye las 30 semanas de carrera según tus horas reales.</p>
+      
+      <input
+        type="range"
+        min="4"
+        max="25"
+        step="1"
+        [(ngModel)]="demoHours"
+        class="w-full accent-indigo-500 cursor-pointer"
+      />
+
+      <div class="flex justify-between text-[11px] text-slate-400">
+        <span>4h (Sostenible)</span>
+        <span>12h (Balanceado)</span>
+        <span>25h (Intensivo)</span>
+      </div>
+    </div>
+
+    <!-- Paso 2: Progreso de Hitos -->
+    <div class="tui-island p-5 bg-[#161822] space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Paso 2: Hitos Prácticos</span>
+        <span class="tui-badge" data-appearance="positive">{{ completedCount }}/3 Dominados</span>
+      </div>
+      <h2 class="text-sm font-bold text-white">Registra tu Avance Módulo a Módulo</h2>
+      <p class="text-xs text-slate-400">Haz clic para simular la finalización de unidades:</p>
+
+      <div class="space-y-2">
+        @for (m of milestones(); track m.id) {
+          <label class="flex items-center gap-2.5 p-2 rounded-lg bg-[#141620] border border-[#222534] text-xs text-slate-200 cursor-pointer hover:border-indigo-500/50 transition-colors">
+            <input
+              type="checkbox"
+              [checked]="m.done"
+              (change)="toggleMilestone(m.id)"
+              class="h-4 w-4 rounded accent-emerald-500"
+            />
+            <span [class.line-through]="m.done" class="flex-1">{{ m.title }}</span>
+            <span class="text-[10px] text-slate-400 font-mono">{{ m.hours }}h</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Paso 3: Notificaciones y Timer -->
+    <div class="tui-island p-5 bg-[#161822] space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Paso 3: Recordatorios & Focus</span>
+      </div>
+      <h2 class="text-sm font-bold text-white">Sesiones de Enfoque y Alertas</h2>
+      <p class="text-xs text-slate-400">Prueba el temporizador Pomodoro o genera una notificación de estudio inteligente:</p>
+
+      <div class="flex gap-2 pt-2">
+        <button
+          type="button"
+          (click)="openTimer.emit()"
+          class="tui-btn tui-btn-secondary flex-1 py-2 text-xs"
+        >
+          ⏱️ Abrir Pomodoro
+        </button>
+        <button
+          type="button"
+          (click)="simulateReminder()"
+          class="tui-btn tui-btn-secondary flex-1 py-2 text-xs text-amber-300 border-amber-500/30"
+        >
+          🔔 Probar Alerta
+        </button>
+      </div>
+    </div>
+
+    <!-- Paso 4: Mini Mentor IA -->
+    <div class="tui-island p-5 bg-[#161822] space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Paso 4: Mentor Técnico</span>
+        <span class="text-[10px] text-slate-400">Gemini 3.5</span>
+      </div>
+      <h2 class="text-sm font-bold text-white">Haz una Consulta de Prueba</h2>
+      
+      <div class="p-3 rounded-lg bg-[#141620] border border-[#222534] text-xs text-slate-300 min-h-[50px] leading-relaxed">
+        @if (aiLoading()) {
+          <span class="text-indigo-400 animate-pulse">Consultando a Gemini...</span>
+        } @else {
+          {{ aiResponse() }}
+        }
+      </div>
+
+      <div class="flex gap-2">
+        <app-audio-transcriber (textTranscribed)="onVoiceTranscribed($event)" />
+        <input
+          type="text"
+          [(ngModel)]="aiQuestion"
+          placeholder="Ej: ¿Cómo organizar mis horas?"
+          (keydown.enter)="askMiniMentor()"
+          class="flex-1 bg-[#141620] border border-[#222534] rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500"
+        />
+        <button
+          type="button"
+          (click)="askMiniMentor()"
+          [disabled]="aiLoading() || !aiQuestion.trim()"
+          class="tui-btn tui-btn-primary px-3 py-1.5 text-xs disabled:opacity-40"
+        >
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

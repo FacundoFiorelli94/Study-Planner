@@ -1,0 +1,225 @@
+<div class="space-y-6">
+  <!-- Tarjetas Principales de Métricas (Taiga UI Islands) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Racha de Estudio -->
+    <div class="tui-island p-5 bg-[#161822] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+          <span>🔥</span> Racha de Estudio
+        </span>
+        <span class="tui-badge" data-appearance="warning">
+          Récord: {{ streak.longestStreakDays }} días
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white">{{ streak.currentStreakDays }}</span>
+        <span class="text-xs text-slate-400">días consecutivos</span>
+      </div>
+      <p class="text-[11px] text-slate-400">
+        Mantén el hábito diario para no perder el multiplicador de racha.
+      </p>
+    </div>
+
+    <!-- Progreso Global -->
+    <div class="tui-island p-5 bg-[#161822] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+          Avance de la Carrera
+        </span>
+        <span class="tui-badge" data-appearance="accent">
+          {{ storage.roadmapProgress().percent }}%
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white">
+          {{ completedCount }}/{{ allModules.length }}
+        </span>
+        <span class="text-xs text-slate-400">módulos listos</span>
+      </div>
+      <div class="tui-progress-bar">
+        <div class="tui-progress-bar-fill" [style.width.%]="storage.roadmapProgress().percent"></div>
+      </div>
+    </div>
+
+    <!-- Horas Dedicadas -->
+    <div class="tui-island p-5 bg-[#161822] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+          Horas Registradas
+        </span>
+        <span class="tui-badge" data-appearance="positive">
+          Focus
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white">{{ totalHoursLogged }}h</span>
+        <span class="text-xs text-slate-400">de {{ totalEstimatedHours }}h estimadas</span>
+      </div>
+      <p class="text-[11px] text-slate-400">
+        Basado en tus sesiones completadas y tiempo Pomodoro.
+      </p>
+    </div>
+
+    <!-- Módulos en Marcha -->
+    <div class="tui-island p-5 bg-[#161822] space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-sky-400 uppercase tracking-wider">
+          En Progreso
+        </span>
+        <span class="tui-badge" data-appearance="neutral">
+          Activos
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-extrabold text-white">{{ inProgressCount }}</span>
+        <span class="text-xs text-slate-400">módulos en curso</span>
+      </div>
+      <p class="text-[11px] text-slate-400">
+        Unidades con sesiones o entregables abiertos.
+      </p>
+    </div>
+  </div>
+
+  <!-- Gráfico de Actividad de los Últimos 7 Días -->
+  <div class="tui-island p-5 sm:p-6 bg-[#161822] space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-white">Actividad Reciente (Últimos 7 Días)</h2>
+        <p class="text-xs text-slate-400">Distribución de minutos de estudio dedicados</p>
+      </div>
+      <span class="text-xs text-slate-400 font-mono">Minutos / Día</span>
+    </div>
+
+    <div class="h-44 flex items-end justify-between gap-3 pt-6 border-b border-[#232736]">
+      @for (d of last7Days; track d.dayLabel) {
+        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+          <span class="text-[10px] text-slate-400 font-mono">
+            {{ d.minutes > 0 ? d.minutes + 'm' : '' }}
+          </span>
+          <div
+            class="w-full max-w-[40px] rounded-t-lg bg-indigo-600/30 hover:bg-indigo-500 transition-all border border-indigo-500/40 relative group"
+            [style.height.%]="d.minutes > 0 ? (d.minutes / max7DaysMinutes()) * 100 : 8"
+          >
+            <div class="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-black text-[9px] text-white whitespace-nowrap pointer-events-none transition-opacity">
+              {{ d.minutes }} min
+            </div>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">{{ d.dayLabel }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Proyectos de Portafolio Técnico -->
+  <div class="tui-island p-5 sm:p-6 bg-[#161822] space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-white">Proyectos Prácticos de Portafolio</h2>
+        <p class="text-xs text-slate-400">Laboratorios obligatorios para demostrar competencia técnica</p>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      @for (proj of storage.activeRoadmap().portfolioProjects; track proj.id) {
+        <div class="p-4 rounded-xl bg-[#191c28] border border-[#242838] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="tui-badge" data-appearance="accent">Fase {{ proj.phaseNumber }}</span>
+              <span class="text-xs text-slate-400">Semana {{ proj.requiredWeek }}</span>
+              <span
+                class="tui-badge"
+                [attr.data-appearance]="
+                  proj.status === 'completed' ? 'positive' :
+                  proj.status === 'in_progress' ? 'warning' : 'neutral'
+                "
+              >
+                {{
+                  proj.status === 'completed' ? 'Completado' :
+                  proj.status === 'in_progress' ? 'En Progreso' : 'Pendiente'
+                }}
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-white">{{ proj.title }}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">{{ proj.description }}</p>
+
+            <!-- URL de Repositorio GitHub -->
+            <div class="pt-1 flex items-center gap-2 text-xs">
+              <span class="text-slate-400">Repositorio:</span>
+              @if (editingProjectId() === proj.id) {
+                <div class="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    [(ngModel)]="repoInput"
+                    placeholder="https://github.com/usuario/repo"
+                    class="bg-[#12141c] border border-[#2a2e40] rounded px-2 py-0.5 text-xs text-slate-200 outline-none"
+                  />
+                  <button
+                    type="button"
+                    (click)="saveRepo(proj.id)"
+                    class="tui-btn tui-btn-primary px-2 py-0.5 text-[11px]"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              } @else {
+                <span class="text-slate-300 font-mono">
+                  {{ proj.repoUrl || 'No configurado aún' }}
+                </span>
+                <button
+                  type="button"
+                  (click)="startEditRepo(proj)"
+                  class="text-indigo-400 hover:text-indigo-300 text-[11px]"
+                >
+                  Editar
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="shrink-0 self-end sm:self-center">
+            <button
+              type="button"
+              (click)="onOpenLab(proj)"
+              class="tui-btn tui-btn-secondary px-3.5 py-1.5 text-xs"
+            >
+              Abrir Laboratorio
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Gestión de Copia de Seguridad JSON -->
+  <div class="tui-island p-5 bg-[#161822] flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#232736]">
+    <div class="space-y-0.5 text-center sm:text-left">
+      <h3 class="text-sm font-bold text-white">Copia de Seguridad y Migración</h3>
+      <p class="text-xs text-slate-400">Exporta o restaura todo tu progreso, sesiones y notas en formato JSON</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="exportData()"
+        class="tui-btn tui-btn-secondary px-3 py-1.5 text-xs"
+      >
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <span>Exportar JSON</span>
+      </button>
+
+      <label class="tui-btn tui-btn-secondary px-3 py-1.5 text-xs cursor-pointer">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        <span>Importar JSON</span>
+        <input type="file" accept=".json" (change)="importData($event)" class="hidden" />
+      </label>
+    </div>
+  </div>
+</div>

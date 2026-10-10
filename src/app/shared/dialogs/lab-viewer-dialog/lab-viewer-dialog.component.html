@@ -1,0 +1,149 @@
+@if (project(); as p) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in">
+    <div class="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-[#161822] border border-[#2a2e40] shadow-2xl overflow-hidden">
+      
+      <!-- Encabezado del Modal -->
+      <div class="px-5 py-4 border-b border-[#242838] flex items-center justify-between gap-4 bg-[#141620]">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2">
+            <span class="tui-badge" data-appearance="accent">Fase {{ p.phaseNumber }}</span>
+            <span class="text-xs text-slate-400">Dificultad: {{ p.labGuide?.difficulty || 'Intermedio' }}</span>
+          </div>
+          <h2 class="text-base sm:text-lg font-bold text-white">{{ p.title }}</h2>
+        </div>
+
+        <button
+          type="button"
+          (click)="close.emit()"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-rose-500/20 transition-colors"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Barra de Pestañas de Navegación del Laboratorio (Taiga UI) -->
+      <div class="flex items-center px-5 border-b border-[#232736] bg-[#12141d] gap-2">
+        <button
+          type="button"
+          (click)="activeTab.set('guide')"
+          [class.tui-tab_active]="activeTab() === 'guide'"
+          class="tui-tab text-xs"
+        >
+          Escenario y Objetivo
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('steps')"
+          [class.tui-tab_active]="activeTab() === 'steps'"
+          class="tui-tab text-xs"
+        >
+          Pasos de Implementación ({{ completedStepsCount }}/{{ totalStepsCount }})
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('architecture')"
+          [class.tui-tab_active]="activeTab() === 'architecture'"
+          class="tui-tab text-xs"
+        >
+          Arquitectura
+        </button>
+      </div>
+
+      <!-- Cuerpo del Laboratorio -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 bg-[#0f1118] space-y-5">
+        @if (activeTab() === 'guide') {
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-[#161824] border border-[#262a3b] space-y-2">
+              <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Objetivo del Laboratorio</h3>
+              <p class="text-sm text-slate-200 leading-relaxed">{{ p.labGuide?.objective }}</p>
+            </div>
+
+            <div class="p-4 rounded-xl bg-[#161824] border border-[#262a3b] space-y-2">
+              <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Escenario Práctico</h3>
+              <p class="text-sm text-slate-300 leading-relaxed">{{ p.labGuide?.scenario }}</p>
+            </div>
+
+            @if (p.labGuide?.prerequisites) {
+              <div class="p-4 rounded-xl bg-[#161824] border border-[#262a3b] space-y-2">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisitos Previos</h3>
+                <ul class="list-disc pl-5 text-xs text-slate-300 space-y-1">
+                  @for (req of p.labGuide!.prerequisites; track req) {
+                    <li>{{ req }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        }
+
+        @if (activeTab() === 'steps') {
+          <div class="space-y-4">
+            @for (st of p.labGuide?.steps; track st.stepNumber; let idx = $index) {
+              <div class="p-4 rounded-xl bg-[#161824] border border-[#262a3b] space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="st.completed"
+                      (change)="onToggleStep(idx)"
+                      class="h-4 w-4 rounded accent-indigo-500"
+                    />
+                    <span class="text-sm font-bold text-white">
+                      Paso {{ st.stepNumber }}: {{ st.title }}
+                    </span>
+                  </label>
+                  <span class="text-xs text-slate-400">{{ st.duration }}</span>
+                </div>
+
+                <p class="text-xs text-slate-300 leading-relaxed">{{ st.explanation }}</p>
+
+                @if (st.commandOrSnippet) {
+                  <div class="relative rounded-lg bg-[#0e1017] border border-[#212433] p-3 font-mono text-xs text-slate-200 overflow-x-auto">
+                    <button
+                      type="button"
+                      (click)="copySnippet(st.commandOrSnippet, idx)"
+                      class="absolute top-2 right-2 px-2 py-0.5 rounded bg-[#1c1f2e] text-[10px] text-slate-300 hover:text-white"
+                    >
+                      {{ copiedIndex() === idx ? '¡Copiado!' : 'Copiar' }}
+                    </button>
+                    <pre><code>{{ st.commandOrSnippet }}</code></pre>
+                  </div>
+                }
+
+                @if (st.deliverableCheck) {
+                  <div class="text-[11px] text-emerald-400 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                    Criterio de validación: {{ st.deliverableCheck }}
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (activeTab() === 'architecture') {
+          <div class="p-5 rounded-xl bg-[#161824] border border-[#262a3b] space-y-3">
+            <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Visión Arquitectónica</h3>
+            <p class="text-sm text-slate-300 leading-relaxed font-mono">
+              {{ p.labGuide?.architectureOverview }}
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- Barra de Progreso Inferior -->
+      <div class="px-5 py-3 border-t border-[#242838] flex items-center justify-between bg-[#141620] text-xs">
+        <span class="text-slate-400">Progreso del laboratorio: {{ progressPercent }}%</span>
+        <button
+          type="button"
+          (click)="close.emit()"
+          class="tui-btn tui-btn-primary px-4 py-1.5"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}

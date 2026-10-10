@@ -1,0 +1,122 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+  <div class="relative w-full max-w-md rounded-2xl bg-[#161822] border border-[#2a2e40] shadow-2xl p-6 flex flex-col items-center space-y-5">
+    
+    <!-- Barra Superior -->
+    <div class="w-full flex items-center justify-between border-b border-[#242838] pb-3">
+      <div class="flex items-center gap-2">
+        <span class="tui-badge" data-appearance="accent">Pomodoro Focus</span>
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="text-slate-400 hover:text-white"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Selector de Modo: Trabajo vs Descanso (Taiga UI Tabs) -->
+    <div class="flex rounded-xl bg-[#12141d] p-1 border border-[#232736]">
+      <button
+        type="button"
+        (click)="setMode('work')"
+        [class]="mode() === 'work' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      >
+        Enfoque ({{ workMinutes() }}m)
+      </button>
+      <button
+        type="button"
+        (click)="setMode('break')"
+        [class]="mode() === 'break' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      >
+        Descanso ({{ breakMinutes() }}m)
+      </button>
+    </div>
+
+    <!-- Módulo Seleccionado -->
+    <div class="w-full">
+      <label class="text-[11px] text-slate-400 font-medium block mb-1">Módulo asignado a esta sesión:</label>
+      <select
+        [(ngModel)]="selectedModuleId"
+        class="w-full bg-[#1b1e2c] border border-[#2a2e3f] rounded-lg p-2 text-xs text-slate-200 outline-none"
+      >
+        @for (mod of allModules; track mod.id) {
+          <option [value]="mod.id">{{ mod.title }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Esfera de Reloj Central -->
+    <div class="relative w-48 h-48 flex items-center justify-center">
+      <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <circle
+          cx="50"
+          cy="50"
+          r="44"
+          fill="transparent"
+          stroke="#202434"
+          stroke-width="5"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="44"
+          fill="transparent"
+          stroke="#6366f1"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-dasharray="276"
+          [attr.stroke-dashoffset]="276 - (276 * progressPercent) / 100"
+          class="transition-all duration-300"
+        />
+      </svg>
+      <div class="absolute flex flex-col items-center">
+        <span class="text-3xl font-extrabold text-white font-mono tracking-tight">
+          {{ formattedTime }}
+        </span>
+        <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">
+          {{ mode() === 'work' ? 'Tiempo de Estudio' : 'Pausa Activa' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Controles Play / Pause / Reset -->
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="resetTimer()"
+        class="tui-btn tui-btn-secondary p-3 rounded-full"
+        title="Reiniciar"
+      >
+        <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        (click)="toggleTimer()"
+        class="tui-btn tui-btn-primary px-6 py-3 rounded-full text-sm font-bold shadow-lg"
+      >
+        @if (isRunning()) {
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" />
+            <rect x="14" y="4" width="4" height="16" />
+          </svg>
+          <span>Pausar</span>
+        } @else {
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          <span>Iniciar</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>

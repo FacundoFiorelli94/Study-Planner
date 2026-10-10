@@ -1,0 +1,196 @@
+/* Taiga UI v4 Theme Tokens & Scandinavian Minimalist Aesthetic */
+:root {
+  --tui-font-text: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --tui-font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  --tui-radius-xs: 6px;
+  --tui-radius-s: 8px;
+  --tui-radius-m: 12px;
+  --tui-radius-l: 16px;
+  --tui-radius-xl: 20px;
+
+  /* Base Dark Palette */
+  --tui-background-base: #13151b;
+  --tui-background-elevation-1: #16181f;
+  --tui-background-elevation-2: #1b1e28;
+  --tui-background-elevation-3: #222634;
+  --tui-background-accent: rgba(99, 102, 241, 0.12);
+
+  --tui-border-normal: rgba(255, 255, 255, 0.08);
+  --tui-border-hover: rgba(255, 255, 255, 0.16);
+  --tui-border-focus: #6366f1;
+
+  --tui-text-primary: #f1f5f9;
+  --tui-text-secondary: #94a3b8;
+  --tui-text-tertiary: #64748b;
+
+  --tui-primary: #6366f1;
+  --tui-primary-hover: #4f46e5;
+  --tui-primary-active: #4338ca;
+  --tui-primary-text: #ffffff;
+
+  --tui-positive: #10b981;
+  --tui-warning: #f59e0b;
+  --tui-negative: #ef4444;
+
+  --tui-shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --tui-shadow-medium: 0 8px 16px -4px rgba(0, 0, 0, 0.35);
+  --tui-shadow-large: 0 16px 32px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Taiga UI Island & Card styling */
+.tui-island, [tuiCardLarge] {
+  background: var(--tui-background-elevation-1);
+  border: 1px solid var(--tui-border-normal);
+  border-radius: var(--tui-radius-l);
+  box-shadow: var(--tui-shadow-small);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tui-island:hover, [tuiCardLarge]:hover {
+  border-color: var(--tui-border-hover);
+  box-shadow: var(--tui-shadow-medium);
+}
+
+/* Taiga UI Tabs minimal navigation */
+.tui-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--tui-border-normal);
+}
+
+.tui-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tui-text-secondary);
+  border-radius: var(--tui-radius-m) var(--tui-radius-m) 0 0;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.tui-tab:hover {
+  color: var(--tui-text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tui-tab.tui-tab_active {
+  color: var(--tui-text-primary);
+  font-weight: 600;
+}
+
+.tui-tab.tui-tab_active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--tui-primary);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Taiga UI Badge styling */
+.tui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.tui-badge[data-appearance="neutral"] {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.tui-badge[data-appearance="accent"] {
+  background: var(--tui-background-accent);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.tui-badge[data-appearance="positive"] {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.tui-badge[data-appearance="warning"] {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* Buttons with Taiga aesthetics */
+.tui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  border-radius: var(--tui-radius-m);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.tui-btn-primary {
+  background: var(--tui-primary);
+  color: var(--tui-primary-text);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+.tui-btn-primary:hover {
+  background: var(--tui-primary-hover);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45);
+  transform: translateY(-1px);
+}
+
+.tui-btn-secondary {
+  background: var(--tui-background-elevation-2);
+  color: var(--tui-text-primary);
+  border-color: var(--tui-border-normal);
+}
+
+.tui-btn-secondary:hover {
+  background: var(--tui-background-elevation-3);
+  border-color: var(--tui-border-hover);
+}
+
+.tui-btn-flat {
+  background: transparent;
+  color: var(--tui-text-secondary);
+}
+
+.tui-btn-flat:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--tui-text-primary);
+}
+
+/* Progress bar Taiga */
+.tui-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--tui-background-elevation-3);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.tui-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tui-primary), #818cf8);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
